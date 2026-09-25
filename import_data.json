@@ -1,0 +1,233 @@
+{
+  "settings": {
+    "storeName": "DZ Location Prestige",
+    "phone": "+213 (0) 550 12 34 56",
+    "email": "contact@dzlocation.dz",
+    "address": "Boulevard Zirout Youcef, Alger Centre, Algérie",
+    "storeLogo": "",
+    "mainColors": {
+      "primary": "#2563eb",
+      "secondary": "#0f172a"
+    },
+    "hero": {
+      "title": {
+        "fr": "Le frisson de la location premium en Algérie"
+      },
+      "subtitle": {
+        "fr": "Découvrez notre flotte exclusive de voitures, motos et jet-skis. Payez 100% sur place à la récupération de votre véhicule."
+      },
+      "backgroundImage": ""
+    },
+    "showDateSearch": true,
+    "showSearchWidget": true,
+    "locations": [
+      {
+        "name": "Aéroport International d'Alger - Houari Boumédiène",
+        "type": "Airport",
+        "categories": ["Car", "Motorcycle"]
+      },
+      {
+        "name": "Aéroport International d'Oran - Ahmed Ben Bella",
+        "type": "Airport",
+        "categories": ["Car", "Motorcycle"]
+      },
+      {
+        "name": "Agence Centrale - Alger Centre",
+        "type": "City",
+        "categories": ["Car", "Motorcycle"]
+      },
+      {
+        "name": "Base Nautique Marina Sidi Fredj (Alger)",
+        "type": "Marina",
+        "categories": ["JetSki"]
+      },
+      {
+        "name": "Base Nautique Les Andalouses (Oran)",
+        "type": "Marina",
+        "categories": ["JetSki"]
+      }
+    ]
+  },
+  "categories": [
+    {
+      "name": "Car",
+      "name_fr": "Voiture",
+      "isVisible": true,
+      "subcategories": [
+        "Berline de Luxe",
+        "SUV & 4x4",
+        "Sport & Supercar",
+        "Économique / Compacte",
+        "Véhicules de Mariage",
+        "Cabriolet"
+      ],
+      "subcategories_fr": [
+        "Berline de Luxe",
+        "SUV & 4x4",
+        "Sport & Supercar",
+        "Économique / Compacte",
+        "Véhicules de Mariage",
+        "Cabriolet"
+      ]
+    },
+    {
+      "name": "Motorcycle",
+      "name_fr": "Moto",
+      "isVisible": true,
+      "subcategories": [
+        "Sportive",
+        "Routière / Cruiser",
+        "Scooter",
+        "Aventure"
+      ],
+      "subcategories_fr": [
+        "Sportive",
+        "Routière / Cruiser",
+        "Scooter",
+        "Aventure"
+      ]
+    },
+    {
+      "name": "JetSki",
+      "name_fr": "Jet Ski",
+      "isVisible": true,
+      "subcategories": [
+        "Sport & Performance",
+        "Loisir",
+        "Grand Tourisme"
+      ],
+      "subcategories_fr": [
+        "Sport & Performance",
+        "Loisir",
+        "Grand Tourisme"
+      ]
+    }
+  ],
+  "extraOptions": [
+    {
+      "name": "Siège Enfant de Sécurité",
+      "name_fr": "Siège Enfant de Sécurité",
+      "price": 1500,
+      "priceType": "per_day",
+      "applicableTo": "Category",
+      "category": "Car",
+      "isActive": true
+    },
+    {
+      "name": "Conducteur Supplémentaire",
+      "name_fr": "Conducteur Supplémentaire",
+      "price": 2000,
+      "priceType": "flat_rate",
+      "applicableTo": "All",
+      "isActive": true
+    },
+    {
+      "name": "Système de Navigation GPS",
+      "name_fr": "Système de Navigation GPS",
+      "price": 1000,
+      "priceType": "per_day",
+      "applicableTo": "Category",
+      "category": "Car",
+      "isActive": true
+    },
+    {
+      "name": "Assurance Tous Risques (Zéro Franchise)",
+      "name_fr": "Assurance Tous Risques (Zéro Franchise)",
+      "price": 3000,
+      "priceType": "per_day",
+      "applicableTo": "All",
+      "isActive": true
+    },
+    {
+      "name": "Routeur Wi-Fi 4G Haut Débit",
+      "name_fr": "Routeur Wi-Fi 4G Haut Débit",
+      "price": 800,
+      "priceType": "per_day",
+      "applicableTo": "Category",
+      "category": "Car",
+      "isActive": true
+    },
+    {
+      "name": "Casque Homologué & Gants de Protection",
+      "name_fr": "Casque Homologué & Gants de Protection",
+      "price": 1000,
+      "priceType": "flat_rate",
+      "applicableTo": "Category",
+      "category": "Motorcycle",
+      "isActive": true
+    },
+    {
+      "name": "Combinaison Néoprène & Gilet de Sauvetage",
+      "name_fr": "Combinaison Néoprène & Gilet de Sauvetage",
+      "price": 1500,
+      "priceType": "flat_rate",
+      "applicableTo": "Category",
+      "category": "JetSki",
+      "isActive": true
+    }
+  ],
+  "vehicles": [
+    {
+      "make": "Mercedes-Benz",
+      "model": "G 63 AMG",
+      "year": 2024,
+      "category": "Car",
+      "subcategory": "SUV & 4x4",
+      "pricePerDay": 50000,
+      "securityDeposit": 150000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1520050206274-a1ae44613e6d?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Automatic",
+        "fuel": "Petrol"
+      },
+      "description": "4x4 V8 Biturbo de luxe avec intérieur cuir Nappa d'exception.",
+      "conditions": "Permis de conduire valide de plus de 2 ans et pièce d'identité requise."
+    },
+    {
+      "make": "Porsche",
+      "model": "911 Carrera S",
+      "year": 2024,
+      "category": "Car",
+      "subcategory": "Sport & Supercar",
+      "pricePerDay": 45000,
+      "securityDeposit": 200000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 2,
+        "transmission": "Automatic",
+        "fuel": "Petrol"
+      },
+      "description": "Supercar iconique alliant performance pure et élégance incomparable.",
+      "conditions": "Permis de conduire valide de plus de 3 ans."
+    },
+    {
+      "make": "Yamaha",
+      "model": "WaveRunner FX Cruiser",
+      "year": 2024,
+      "category": "JetSki",
+      "subcategory": "Sport & Performance",
+      "pricePerHour": 9000,
+      "securityDeposit": 35000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1559310589-2673bfe16970?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "horsepower": 250,
+        "life_jackets_included": true
+      },
+      "description": "Jet Ski triplace haut de gamme idéal pour les sensations fortes en mer.",
+      "conditions": "Port du gilet de sauvetage obligatoire."
+    }
+  ]
+}

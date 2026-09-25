@@ -47,4 +47,50 @@ router.post('/verify', loginLimiter, async (req, res) => {
   return res.status(200).json({ ok: true });
 });
 
+// POST /api/admin/import-json
+// Accepts a JSON payload containing settings, categories, extraOptions, vehicles
+router.post('/import-json', async (req, res) => {
+  try {
+    const data = req.body;
+    if (!data || typeof data !== 'object') {
+      return res.status(400).json({ error: 'Payload JSON valide requis.' });
+    }
+
+    let counts = { settings: false, categories: 0, extraOptions: 0, vehicles: 0 };
+
+    if (data.settings) {
+      const SiteSettings = (await import('../models/SiteSettings.js')).default;
+      await SiteSettings.deleteMany({});
+      await SiteSettings.create(data.settings);
+      counts.settings = true;
+    }
+
+    if (Array.isArray(data.categories) && data.categories.length > 0) {
+      const Category = (await import('../models/Category.js')).default;
+      await Category.deleteMany({});
+      const result = await Category.insertMany(data.categories);
+      counts.categories = result.length;
+    }
+
+    if (Array.isArray(data.extraOptions) && data.extraOptions.length > 0) {
+      const ExtraOption = (await import('../models/ExtraOption.js')).default;
+      await ExtraOption.deleteMany({});
+      const result = await ExtraOption.insertMany(data.extraOptions);
+      counts.extraOptions = result.length;
+    }
+
+    if (Array.isArray(data.vehicles) && data.vehicles.length > 0) {
+      const Vehicle = (await import('../models/Vehicle.js')).default;
+      await Vehicle.deleteMany({});
+      const result = await Vehicle.insertMany(data.vehicles);
+      counts.vehicles = result.length;
+    }
+
+    res.json({ ok: true, message: 'Données importées avec succès !', counts });
+  } catch (error) {
+    console.error('[Admin Import] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;
