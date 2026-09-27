@@ -1,20 +1,20 @@
 {
   "settings": {
-    "storeName": "DZ Location Prestige",
-    "phone": "+213 (0) 550 12 34 56",
-    "email": "contact@dzlocation.dz",
-    "address": "Boulevard Zirout Youcef, Alger Centre, Algérie",
+    "storeName": "Bahia Auto",
+    "phone": "+213 560 00 00 00",
+    "email": "contact@bahiaauto.dz",
+    "address": "Oran, Algérie",
     "storeLogo": "",
     "mainColors": {
-      "primary": "#2563eb",
-      "secondary": "#0f172a"
+      "primary": "#0B5ED7",
+      "secondary": "#0B1F33"
     },
     "hero": {
       "title": {
-        "fr": "Le frisson de la location premium en Algérie"
+        "fr": "Votre voiture, votre liberté à Oran"
       },
       "subtitle": {
-        "fr": "Découvrez notre flotte exclusive de voitures, motos et jet-skis. Payez 100% sur place à la récupération de votre véhicule."
+        "fr": "Bahia Auto vous accompagne avec une flotte variée pour vos déplacements à Oran et dans l'Ouest algérien."
       },
       "backgroundImage": ""
     },
@@ -22,29 +22,43 @@
     "showSearchWidget": true,
     "locations": [
       {
-        "name": "Aéroport International d'Alger - Houari Boumédiène",
-        "type": "Airport",
-        "categories": ["Car", "Motorcycle"]
-      },
-      {
         "name": "Aéroport International d'Oran - Ahmed Ben Bella",
         "type": "Airport",
-        "categories": ["Car", "Motorcycle"]
+        "categories": [
+          "Car",
+          "Motorcycle"
+        ]
       },
       {
-        "name": "Agence Centrale - Alger Centre",
+        "name": "Bahia Auto - Oran Centre",
         "type": "City",
-        "categories": ["Car", "Motorcycle"]
+        "categories": [
+          "Car",
+          "Motorcycle"
+        ]
       },
       {
-        "name": "Base Nautique Marina Sidi Fredj (Alger)",
-        "type": "Marina",
-        "categories": ["JetSki"]
+        "name": "Bahia Auto - Bir El Djir",
+        "type": "City",
+        "categories": [
+          "Car",
+          "Motorcycle"
+        ]
       },
       {
-        "name": "Base Nautique Les Andalouses (Oran)",
+        "name": "Aïn El Turk - Oran",
+        "type": "City",
+        "categories": [
+          "Car",
+          "Motorcycle"
+        ]
+      },
+      {
+        "name": "Base Nautique - Les Andalouses",
         "type": "Marina",
-        "categories": ["JetSki"]
+        "categories": [
+          "JetSki"
+        ]
       }
     ]
   },
@@ -131,16 +145,16 @@
       "isActive": true
     },
     {
-      "name": "Assurance Tous Risques (Zéro Franchise)",
-      "name_fr": "Assurance Tous Risques (Zéro Franchise)",
+      "name": "Assurance Tous Risques",
+      "name_fr": "Assurance Tous Risques",
       "price": 3000,
       "priceType": "per_day",
       "applicableTo": "All",
       "isActive": true
     },
     {
-      "name": "Routeur Wi-Fi 4G Haut Débit",
-      "name_fr": "Routeur Wi-Fi 4G Haut Débit",
+      "name": "Routeur Wi-Fi 4G",
+      "name_fr": "Routeur Wi-Fi 4G",
       "price": 800,
       "priceType": "per_day",
       "applicableTo": "Category",
@@ -148,8 +162,17 @@
       "isActive": true
     },
     {
-      "name": "Casque Homologué & Gants de Protection",
-      "name_fr": "Casque Homologué & Gants de Protection",
+      "name": "Siège Bébé",
+      "name_fr": "Siège Bébé",
+      "price": 1500,
+      "priceType": "flat_rate",
+      "applicableTo": "Category",
+      "category": "Car",
+      "isActive": true
+    },
+    {
+      "name": "Casque & Gants",
+      "name_fr": "Casque & Gants",
       "price": 1000,
       "priceType": "flat_rate",
       "applicableTo": "Category",
@@ -157,8 +180,8 @@
       "isActive": true
     },
     {
-      "name": "Combinaison Néoprène & Gilet de Sauvetage",
-      "name_fr": "Combinaison Néoprène & Gilet de Sauvetage",
+      "name": "Combinaison Néoprène & Gilet",
+      "name_fr": "Combinaison Néoprène & Gilet",
       "price": 1500,
       "priceType": "flat_rate",
       "applicableTo": "Category",
@@ -168,66 +191,688 @@
   ],
   "vehicles": [
     {
-      "make": "Mercedes-Benz",
-      "model": "G 63 AMG",
+      "make": "Renault",
+      "model": "Clio 5",
       "year": 2024,
       "category": "Car",
-      "subcategory": "SUV & 4x4",
-      "pricePerDay": 50000,
-      "securityDeposit": 150000,
+      "subcategory": "Économique / Compacte",
+      "pricePerDay": 5500,
+      "securityDeposit": 50000,
       "cautionOptional": true,
       "status": "Available",
       "images": [
-        "https://images.unsplash.com/photo-1520050206274-a1ae44613e6d?q=80&w=1200&auto=format&fit=crop"
+        "https://images.unsplash.com/photo-1549924231-f129b911e442?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Manual",
+        "fuel": "Petrol"
+      },
+      "description": "Citadine moderne, pratique pour les déplacements quotidiens à Oran.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Renault",
+      "model": "Symbol",
+      "year": 2023,
+      "category": "Car",
+      "subcategory": "Économique / Compacte",
+      "pricePerDay": 5000,
+      "securityDeposit": 50000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1502877338535-766e1452684a?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 4,
+        "transmission": "Manual",
+        "fuel": "Petrol"
+      },
+      "description": "Berline économique adaptée aux déplacements urbains et aux trajets régionaux.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Dacia",
+      "model": "Sandero",
+      "year": 2024,
+      "category": "Car",
+      "subcategory": "Économique / Compacte",
+      "pricePerDay": 5500,
+      "securityDeposit": 50000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Manual",
+        "fuel": "Petrol"
+      },
+      "description": "Compacte polyvalente avec un bon espace intérieur.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Hyundai",
+      "model": "i10",
+      "year": 2024,
+      "category": "Car",
+      "subcategory": "Économique / Compacte",
+      "pricePerDay": 5000,
+      "securityDeposit": 50000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1542362567-b07e54358753?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Manual",
+        "fuel": "Petrol"
+      },
+      "description": "Petite citadine facile à conduire et à stationner.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Kia",
+      "model": "Picanto",
+      "year": 2024,
+      "category": "Car",
+      "subcategory": "Économique / Compacte",
+      "pricePerDay": 5500,
+      "securityDeposit": 50000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1553440569-bcc63803a83d?q=80&w=1200&auto=format&fit=crop"
       ],
       "features": {
         "doors": 5,
         "transmission": "Automatic",
         "fuel": "Petrol"
       },
-      "description": "4x4 V8 Biturbo de luxe avec intérieur cuir Nappa d'exception.",
-      "conditions": "Permis de conduire valide de plus de 2 ans et pièce d'identité requise."
+      "description": "Citadine automatique idéale pour les déplacements en ville.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Peugeot",
+      "model": "208",
+      "year": 2024,
+      "category": "Car",
+      "subcategory": "Économique / Compacte",
+      "pricePerDay": 6500,
+      "securityDeposit": 60000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Automatic",
+        "fuel": "Petrol"
+      },
+      "description": "Citadine confortable avec boîte automatique.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Seat",
+      "model": "Ibiza",
+      "year": 2023,
+      "category": "Car",
+      "subcategory": "Économique / Compacte",
+      "pricePerDay": 6000,
+      "securityDeposit": 60000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1504215680853-026ed2a45def?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Manual",
+        "fuel": "Petrol"
+      },
+      "description": "Citadine dynamique pour les déplacements à Oran et alentours.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Volkswagen",
+      "model": "Polo",
+      "year": 2024,
+      "category": "Car",
+      "subcategory": "Économique / Compacte",
+      "pricePerDay": 6500,
+      "securityDeposit": 60000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Automatic",
+        "fuel": "Petrol"
+      },
+      "description": "Citadine polyvalente au confort soigné.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Renault",
+      "model": "Megane",
+      "year": 2023,
+      "category": "Car",
+      "subcategory": "Berline de Luxe",
+      "pricePerDay": 8500,
+      "securityDeposit": 80000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1549924231-f129b911e442?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Automatic",
+        "fuel": "Petrol"
+      },
+      "description": "Berline confortable pour les trajets professionnels et familiaux.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Peugeot",
+      "model": "508",
+      "year": 2023,
+      "category": "Car",
+      "subcategory": "Berline de Luxe",
+      "pricePerDay": 11000,
+      "securityDeposit": 100000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1502877338535-766e1452684a?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Automatic",
+        "fuel": "Petrol"
+      },
+      "description": "Grande berline élégante adaptée aux longs trajets.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Toyota",
+      "model": "Corolla",
+      "year": 2024,
+      "category": "Car",
+      "subcategory": "Berline de Luxe",
+      "pricePerDay": 8500,
+      "securityDeposit": 80000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Automatic",
+        "fuel": "Hybrid"
+      },
+      "description": "Berline hybride confortable et économique.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Hyundai",
+      "model": "Elantra",
+      "year": 2024,
+      "category": "Car",
+      "subcategory": "Berline de Luxe",
+      "pricePerDay": 8000,
+      "securityDeposit": 75000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1542362567-b07e54358753?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Automatic",
+        "fuel": "Petrol"
+      },
+      "description": "Berline moderne avec habitacle spacieux.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Dacia",
+      "model": "Duster",
+      "year": 2024,
+      "category": "Car",
+      "subcategory": "SUV & 4x4",
+      "pricePerDay": 9500,
+      "securityDeposit": 100000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1553440569-bcc63803a83d?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Manual",
+        "fuel": "Petrol"
+      },
+      "description": "SUV polyvalent pour la ville et les escapades dans la région.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Hyundai",
+      "model": "Tucson",
+      "year": 2024,
+      "category": "Car",
+      "subcategory": "SUV & 4x4",
+      "pricePerDay": 12000,
+      "securityDeposit": 120000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Automatic",
+        "fuel": "Petrol"
+      },
+      "description": "SUV familial confortable pour les longs trajets.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Kia",
+      "model": "Sportage",
+      "year": 2024,
+      "category": "Car",
+      "subcategory": "SUV & 4x4",
+      "pricePerDay": 12000,
+      "securityDeposit": 120000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1504215680853-026ed2a45def?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Automatic",
+        "fuel": "Petrol"
+      },
+      "description": "SUV moderne offrant confort et espace.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Volkswagen",
+      "model": "Tiguan",
+      "year": 2024,
+      "category": "Car",
+      "subcategory": "SUV & 4x4",
+      "pricePerDay": 14000,
+      "securityDeposit": 150000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Automatic",
+        "fuel": "Petrol"
+      },
+      "description": "SUV premium polyvalent pour déplacements urbains et régionaux.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Toyota",
+      "model": "RAV4",
+      "year": 2024,
+      "category": "Car",
+      "subcategory": "SUV & 4x4",
+      "pricePerDay": 15000,
+      "securityDeposit": 150000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1549924231-f129b911e442?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Automatic",
+        "fuel": "Hybrid"
+      },
+      "description": "SUV hybride spacieux et confortable.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Mercedes-Benz",
+      "model": "Classe C",
+      "year": 2024,
+      "category": "Car",
+      "subcategory": "Berline de Luxe",
+      "pricePerDay": 22000,
+      "securityDeposit": 250000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1502877338535-766e1452684a?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Automatic",
+        "fuel": "Hybrid"
+      },
+      "description": "Berline premium pensée pour une expérience de conduite raffinée.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "BMW",
+      "model": "Série 3",
+      "year": 2024,
+      "category": "Car",
+      "subcategory": "Berline de Luxe",
+      "pricePerDay": 22000,
+      "securityDeposit": 250000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Automatic",
+        "fuel": "Petrol"
+      },
+      "description": "Berline premium sportive et confortable.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Audi",
+      "model": "A4",
+      "year": 2024,
+      "category": "Car",
+      "subcategory": "Berline de Luxe",
+      "pricePerDay": 21000,
+      "securityDeposit": 250000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1542362567-b07e54358753?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Automatic",
+        "fuel": "Petrol"
+      },
+      "description": "Berline premium au design élégant et à l'habitacle confortable.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Mercedes-Benz",
+      "model": "E-Class",
+      "year": 2024,
+      "category": "Car",
+      "subcategory": "Berline de Luxe",
+      "pricePerDay": 30000,
+      "securityDeposit": 300000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1553440569-bcc63803a83d?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Automatic",
+        "fuel": "Hybrid"
+      },
+      "description": "Grande berline premium pour événements et déplacements professionnels.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
     },
     {
       "make": "Porsche",
-      "model": "911 Carrera S",
+      "model": "911 Carrera",
       "year": 2024,
       "category": "Car",
       "subcategory": "Sport & Supercar",
       "pricePerDay": 45000,
-      "securityDeposit": 200000,
+      "securityDeposit": 400000,
       "cautionOptional": true,
       "status": "Available",
       "images": [
-        "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?q=80&w=1200&auto=format&fit=crop"
+        "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?q=80&w=1200&auto=format&fit=crop"
       ],
       "features": {
         "doors": 2,
         "transmission": "Automatic",
         "fuel": "Petrol"
       },
-      "description": "Supercar iconique alliant performance pure et élégance incomparable.",
-      "conditions": "Permis de conduire valide de plus de 3 ans."
+      "description": "Sportive haut de gamme destinée aux locations premium.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Mercedes-Benz",
+      "model": "AMG GT",
+      "year": 2024,
+      "category": "Car",
+      "subcategory": "Sport & Supercar",
+      "pricePerDay": 50000,
+      "securityDeposit": 450000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1504215680853-026ed2a45def?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 2,
+        "transmission": "Automatic",
+        "fuel": "Petrol"
+      },
+      "description": "Coupé sportif au caractère premium.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Mercedes-Benz",
+      "model": "G 63 AMG",
+      "year": 2024,
+      "category": "Car",
+      "subcategory": "SUV & 4x4",
+      "pricePerDay": 55000,
+      "securityDeposit": 500000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "doors": 5,
+        "transmission": "Automatic",
+        "fuel": "Petrol"
+      },
+      "description": "SUV haut de gamme pour une expérience premium.",
+      "conditions": "Permis de conduire valide et pièce d'identité requis. Conditions définitives selon le contrat Bahia Auto."
+    },
+    {
+      "make": "Yamaha",
+      "model": "MT-07",
+      "year": 2024,
+      "category": "Motorcycle",
+      "subcategory": "Sportive",
+      "pricePerDay": 9000,
+      "securityDeposit": 80000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1549924231-f129b911e442?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "engine_cc": 689,
+        "helmet_included": true
+      },
+      "description": "Moto polyvalente et dynamique pour les déplacements et sorties autour d'Oran.",
+      "conditions": "Permis moto valide et équipement de sécurité requis."
+    },
+    {
+      "make": "Honda",
+      "model": "CB500X",
+      "year": 2024,
+      "category": "Motorcycle",
+      "subcategory": "Aventure",
+      "pricePerDay": 10000,
+      "securityDeposit": 90000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1502877338535-766e1452684a?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "engine_cc": 471,
+        "helmet_included": true
+      },
+      "description": "Moto aventure confortable pour les trajets urbains et régionaux.",
+      "conditions": "Permis moto valide et équipement de sécurité requis."
+    },
+    {
+      "make": "Yamaha",
+      "model": "XMAX 300",
+      "year": 2024,
+      "category": "Motorcycle",
+      "subcategory": "Scooter",
+      "pricePerDay": 7500,
+      "securityDeposit": 70000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "engine_cc": 292,
+        "helmet_included": true
+      },
+      "description": "Scooter confortable et pratique pour la circulation urbaine.",
+      "conditions": "Permis moto valide et équipement de sécurité requis."
+    },
+    {
+      "make": "BMW",
+      "model": "F 900 XR",
+      "year": 2024,
+      "category": "Motorcycle",
+      "subcategory": "Aventure",
+      "pricePerDay": 14000,
+      "securityDeposit": 120000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1542362567-b07e54358753?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "engine_cc": 895,
+        "helmet_included": true
+      },
+      "description": "Moto premium adaptée aux longues sorties routières.",
+      "conditions": "Permis moto valide et équipement de sécurité requis."
+    },
+    {
+      "make": "Honda",
+      "model": "Forza 350",
+      "year": 2024,
+      "category": "Motorcycle",
+      "subcategory": "Scooter",
+      "pricePerDay": 8000,
+      "securityDeposit": 75000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1553440569-bcc63803a83d?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "engine_cc": 330,
+        "helmet_included": true
+      },
+      "description": "Scooter premium confortable pour la ville et la côte oranaise.",
+      "conditions": "Permis moto valide et équipement de sécurité requis."
+    },
+    {
+      "make": "Kawasaki",
+      "model": "Ninja 650",
+      "year": 2024,
+      "category": "Motorcycle",
+      "subcategory": "Sportive",
+      "pricePerDay": 12000,
+      "securityDeposit": 100000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "engine_cc": 649,
+        "helmet_included": true
+      },
+      "description": "Moto sportive polyvalente pour les passionnés de conduite.",
+      "conditions": "Permis moto valide et équipement de sécurité requis."
+    },
+    {
+      "make": "Yamaha",
+      "model": "WaveRunner VX",
+      "year": 2024,
+      "category": "JetSki",
+      "subcategory": "Loisir",
+      "pricePerHour": 9000,
+      "securityDeposit": 50000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1504215680853-026ed2a45def?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "horsepower": 125,
+        "life_jackets_included": true
+      },
+      "description": "Jet Ski triplace adapté aux sorties de loisir sur la côte oranaise.",
+      "conditions": "Gilet de sauvetage obligatoire et respect des consignes nautiques."
     },
     {
       "make": "Yamaha",
       "model": "WaveRunner FX Cruiser",
       "year": 2024,
       "category": "JetSki",
-      "subcategory": "Sport & Performance",
-      "pricePerHour": 9000,
-      "securityDeposit": 35000,
+      "subcategory": "Grand Tourisme",
+      "pricePerHour": 12000,
+      "securityDeposit": 60000,
       "cautionOptional": true,
       "status": "Available",
       "images": [
-        "https://images.unsplash.com/photo-1559310589-2673bfe16970?q=80&w=1200&auto=format&fit=crop"
+        "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=1200&auto=format&fit=crop"
       ],
       "features": {
         "horsepower": 250,
         "life_jackets_included": true
       },
-      "description": "Jet Ski triplace haut de gamme idéal pour les sensations fortes en mer.",
-      "conditions": "Port du gilet de sauvetage obligatoire."
+      "description": "Jet Ski haut de gamme pour des sorties confortables en mer.",
+      "conditions": "Gilet de sauvetage obligatoire et respect des consignes nautiques."
+    },
+    {
+      "make": "Sea-Doo",
+      "model": "GTI 130",
+      "year": 2024,
+      "category": "JetSki",
+      "subcategory": "Sport & Performance",
+      "pricePerHour": 11000,
+      "securityDeposit": 60000,
+      "cautionOptional": true,
+      "status": "Available",
+      "images": [
+        "https://images.unsplash.com/photo-1549924231-f129b911e442?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "features": {
+        "horsepower": 130,
+        "life_jackets_included": true
+      },
+      "description": "Jet Ski polyvalent combinant confort et sensations.",
+      "conditions": "Gilet de sauvetage obligatoire et respect des consignes nautiques."
     }
   ]
 }
