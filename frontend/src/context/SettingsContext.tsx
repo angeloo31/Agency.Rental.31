@@ -78,6 +78,8 @@ export interface SiteSettings {
   email: string;
   address: string;
   generalConditions?: string;
+  defaultRequirements?: { fr: string; en: string; ar: string };
+  defaultConditions?: { fr: string; en: string; ar: string };
   mainColors: ColorSettings;
   hero: HeroSettings;
   aboutStory: AboutStory;

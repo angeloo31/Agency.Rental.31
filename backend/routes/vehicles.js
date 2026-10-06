@@ -306,10 +306,12 @@ router.put('/:id', requireAuth, async (req, res) => {
     const oldImages = Array.isArray(existingVehicle.images) ? existingVehicle.images : [];
     const oldLandingImage = existingVehicle.landingImage || '';
 
-    // Find images in old list that are not in new list
-    const removedImages = oldImages.filter(img => img && !newImages.includes(img));
+    // Find images in old list that are no longer referenced in new images or landingImage
+    const removedImages = oldImages.filter(img => img && !newImages.includes(img) && img !== newLandingImage);
     if (oldLandingImage && oldLandingImage !== newLandingImage && !newImages.includes(oldLandingImage)) {
-      removedImages.push(oldLandingImage);
+      if (!removedImages.includes(oldLandingImage)) {
+        removedImages.push(oldLandingImage);
+      }
     }
 
     // Delete removed images from Cloudinary

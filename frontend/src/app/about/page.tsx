@@ -6,8 +6,8 @@ import { useBooking } from '@/context/BookingContext';
 import { useRouter } from 'next/navigation';
 import { 
   MapPin, Phone, Mail, Clock, Send, CheckCircle2, 
-  Map, Star, ShieldCheck, Compass, Info, Sparkles,
-  Plane, Building2, Waves, ArrowRight, Car, Bike, Ship, Navigation, ExternalLink
+  Sparkles, Plane, Building2, Waves, ArrowRight, Car, Bike, Ship, Navigation,
+  ShieldCheck, Star, Compass
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -57,14 +57,14 @@ export default function AboutPage() {
     return 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=800&auto=format&fit=crop';
   };
 
-  const getLocationBadge = (type: string, locLocale: string) => {
+  const getLocationBadge = (type: string) => {
     if (type === 'Airport') {
-      return { icon: Plane, label: locLocale === 'ar' ? 'مطار VIP' : locLocale === 'fr' ? 'Hub Aéroport' : 'Airport VIP Hub', color: 'bg-blue-600 text-white' };
+      return { icon: Plane, label: 'Hub Aéroport', color: 'bg-blue-600 text-white' };
     }
     if (type === 'Marina') {
-      return { icon: Waves, label: locLocale === 'ar' ? 'مرسى وبحر' : locLocale === 'fr' ? 'Base Nautique' : 'Marina Base', color: 'bg-cyan-600 text-white' };
+      return { icon: Waves, label: 'Base Nautique', color: 'bg-cyan-600 text-white' };
     }
-    return { icon: Building2, label: locLocale === 'ar' ? 'وسط المدينة' : locLocale === 'fr' ? 'Agence Centrale' : 'City Center', color: 'bg-indigo-600 text-white' };
+    return { icon: Building2, label: 'Agence Centrale', color: 'bg-indigo-600 text-white' };
   };
 
   const filteredLocations = selectedType === 'All' 
@@ -143,7 +143,7 @@ export default function AboutPage() {
       setMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
-      toast.error(locale === 'fr' ? 'Échec de l\'envoi du message. Veuillez réessayer.' : 'Failed to send message. Please try again.');
+      toast.error('Échec de l\'envoi du message. Veuillez réessayer.');
     } finally {
       setSending(false);
     }
@@ -210,19 +210,19 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mt-10">
             {[
               {
-                title: locale === 'ar' ? 'سيارات فاخرة' : locale === 'fr' ? 'Voitures de Prestige' : 'Prestige Cars',
+                title: 'Voitures de Prestige',
                 image: 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?q=80&w=800&auto=format&fit=crop',
                 badge: '🏎️ Elite Fleet',
                 animationClass: 'animate-float-blob'
               },
               {
-                title: locale === 'ar' ? 'دراجات نارية' : locale === 'fr' ? 'Motos Sportives' : 'Superbikes',
+                title: 'Motos Sportives',
                 image: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=800&auto=format&fit=crop',
                 badge: '🏍️ Sport Fleet',
                 animationClass: 'animate-float-blob-alt'
               },
               {
-                title: locale === 'ar' ? 'جي سكي' : locale === 'fr' ? 'Jet Skis Exclusive' : 'Marine Fleet',
+                title: 'Jet Skis Exclusive',
                 image: 'https://images.unsplash.com/photo-1563299796-b729d0af54a5?q=80&w=800&auto=format&fit=crop',
                 badge: '🌊 Marine Fleet',
                 animationClass: 'animate-pulse-slow'
@@ -383,10 +383,10 @@ export default function AboutPage() {
             {/* Interactive Type Filter Pills */}
             <div className="flex flex-wrap items-center justify-center gap-2 mt-8">
               {[
-                { id: 'All', label: locale === 'ar' ? 'الكل' : locale === 'fr' ? 'Toutes les Agences' : 'All Agencies' },
-                { id: 'Airport', label: locale === 'ar' ? 'المطارات' : locale === 'fr' ? 'Aéroports' : 'Airports', icon: Plane },
-                { id: 'City', label: locale === 'ar' ? 'وسط المدينة' : locale === 'fr' ? 'Centre-Ville' : 'City Agencies', icon: Building2 },
-                { id: 'Marina', label: locale === 'ar' ? 'الموانئ والشواطئ' : locale === 'fr' ? 'Marinas & Plages' : 'Marinas & Coastal', icon: Waves }
+                { id: 'All', label: 'Toutes les Agences' },
+                { id: 'Airport', label: 'Aéroports', icon: Plane },
+                { id: 'City', label: 'Centre-Ville', icon: Building2 },
+                { id: 'Marina', label: 'Marinas & Plages', icon: Waves }
               ].map((tab) => {
                 const Icon = tab.icon;
                 const isActive = selectedType === tab.id;
@@ -418,7 +418,7 @@ export default function AboutPage() {
             ) : filteredLocations.length > 0 ? (
               filteredLocations.map((loc, idx) => {
                 const coverImage = getLocationImage(loc);
-                const badgeInfo = getLocationBadge(loc.type, locale);
+                const badgeInfo = getLocationBadge(loc.type);
                 const BadgeIcon = badgeInfo.icon;
 
                 return (
@@ -579,7 +579,7 @@ export default function AboutPage() {
               <div className="relative z-10 max-w-2xl">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/15 border border-blue-400/25 text-blue-300 text-xs font-bold uppercase tracking-widest mb-5">
                   <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping" />
-                  {locale === 'ar' ? 'نحن هنا من أجلك' : locale === 'fr' ? 'Nous sommes là pour vous' : 'We\'re here for you'}
+                  Nous sommes là pour vous
                 </div>
                 <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight mb-4 leading-none">
                   {t('contactUs')}
@@ -597,10 +597,10 @@ export default function AboutPage() {
               <div className="lg:col-span-2 bg-gradient-to-br from-slate-900 via-blue-950/80 to-slate-900 p-8 md:p-10 flex flex-col justify-between lg:rounded-bl-[2.5rem]">
                 <div>
                   <h3 className="text-white font-black text-lg mb-1">
-                    {locale === 'ar' ? 'معلومات التواصل' : locale === 'fr' ? 'Nos Coordonnées' : 'Contact Details'}
+                    Nos Coordonnées
                   </h3>
                   <p className="text-slate-500 text-xs mb-8">
-                    {locale === 'ar' ? 'تواصل معنا مباشرة' : locale === 'fr' ? 'Rejoignez-nous directement' : 'Reach us directly'}
+                    Rejoignez-nous directement
                   </p>
 
                   <div className="space-y-5">
@@ -612,7 +612,7 @@ export default function AboutPage() {
                         </div>
                         <div>
                           <p className="text-[10px] uppercase font-extrabold text-slate-500 tracking-widest mb-0.5">
-                            {locale === 'ar' ? 'هاتف' : locale === 'fr' ? 'Téléphone' : 'Phone'}
+                            Téléphone
                           </p>
                           <p className="text-white font-bold text-sm group-hover:text-blue-400 transition-colors">{settings.phone}</p>
                         </div>
@@ -638,7 +638,7 @@ export default function AboutPage() {
                         </div>
                         <div>
                           <p className="text-[10px] uppercase font-extrabold text-slate-500 tracking-widest mb-0.5">
-                            {locale === 'ar' ? 'العنوان' : locale === 'fr' ? 'Adresse' : 'Address'}
+                            Adresse
                           </p>
                           <p className="text-white font-bold text-sm">{settings.address}</p>
                         </div>
@@ -652,15 +652,11 @@ export default function AboutPage() {
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-xl">⭐</span>
                     <span className="text-white font-extrabold text-sm">
-                      {locale === 'ar' ? 'خدمة VIP' : locale === 'fr' ? 'Service VIP' : 'VIP Service'}
+                      Service VIP
                     </span>
                   </div>
                   <p className="text-slate-400 text-xs leading-relaxed">
-                    {locale === 'ar'
-                      ? 'نرد على طلباتكم خلال ساعة واحدة في أوقات العمل.'
-                      : locale === 'fr'
-                      ? 'Nous répondons à vos demandes en moins d\'1h en heures ouvrées.'
-                      : 'We respond to your requests within 1 hour during business hours.'}
+                    Nous répondons à vos demandes en moins d'1h en heures ouvrées.
                   </p>
                 </div>
               </div>

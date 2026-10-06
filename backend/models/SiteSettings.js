@@ -107,6 +107,16 @@ Une caution de garantie est consignée à l'agence lors du départ et vous est i
 4. Annulation gratuite
 L'annulation de la réservation est 100% gratuite à tout moment avant l'heure prévue de prise en charge sans aucun frais.` 
   },
+  defaultRequirements: {
+    fr: { type: String, default: "Permis de conduire valide (min 1 à 2 ans)\nPièce d'identité ou Passeport valide" },
+    en: { type: String, default: "Valid Driving License (Min 1 to 2 years)\nValid National ID or Passport" },
+    ar: { type: String, default: "رخصة قيادة سارية (سنة إلى سنتين على الأقل)\nجواز سفر أو بطاقة هوية سارية" }
+  },
+  defaultConditions: {
+    fr: { type: String, default: "Restitution avec le même niveau de carburant\nVéhicule non-fumeur" },
+    en: { type: String, default: "Return with same fuel level\nStrict Non-Smoking vehicle policy" },
+    ar: { type: String, default: "الاسترجاع بنفس مستوى الوقود\nيمنع التدخين منعاً باتاً" }
+  },
   currencies: {
     primary: { type: String, default: 'DA' },
     enabled: { type: [String], default: ['DA'] },

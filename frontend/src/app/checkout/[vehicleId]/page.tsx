@@ -7,6 +7,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { Check, ChevronRight, CheckCircle2, Navigation2, Camera, Shield, User, ArrowLeft, CreditCard, Sparkles, Phone, Mail, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useSettings } from '@/context/SettingsContext';
+import BrandLogo from '@/components/BrandLogo';
 
 function CheckoutContent() {
   const params = useParams();
@@ -180,7 +181,7 @@ function CheckoutContent() {
           cost = opt.price;
         }
         addonsCost += cost;
-        const optTitle = locale === 'fr' ? (opt.name_fr || opt.name) : locale === 'ar' ? (opt.name_ar || opt.name) : opt.name;
+        const optTitle = opt.name_fr || opt.name;
         addonsBreakdown.push({ name: optTitle, cost });
       }
     });
@@ -318,7 +319,10 @@ function CheckoutContent() {
                     <div className="text-[10px] font-black text-blue-600 mb-1.5 tracking-widest uppercase">
                       {vehicle?.category === 'Car' ? t('car') : vehicle?.category === 'Motorcycle' ? t('motorcycle') : vehicle?.category === 'JetSki' ? t('jetski') : vehicle?.category}
                     </div>
-                    <h3 className="text-2xl font-black text-slate-900 leading-none mb-1">{vehicle?.make}</h3>
+                    <h3 className="text-2xl font-black text-slate-900 leading-none mb-1 flex items-center gap-2">
+                      <BrandLogo brand={vehicle?.make} size={22} />
+                      <span>{vehicle?.make}</span>
+                    </h3>
                     <p className="text-slate-500 font-semibold mb-3">{vehicle?.model} · {vehicle?.year}</p>
                     <div className="flex flex-col gap-1">
                       {pricing.hasDiscount && (
@@ -529,7 +533,7 @@ function CheckoutContent() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className={`font-black text-base leading-tight mb-0.5 ${isSelected ? 'text-white' : 'text-slate-900'}`}>
-                            {locale === 'fr' ? (addon.name_fr || addon.name) : locale === 'ar' ? (addon.name_ar || addon.name) : addon.name}
+                            {addon.name_fr || addon.name}
                           </h4>
                           <p className={`text-xs font-medium leading-snug truncate ${isSelected ? 'text-slate-300' : 'text-slate-400'}`}>
                             {addon.priceType === 'per_day' ? t('pricedPerUnit', 'Priced per duration unit') : t('flatRateTrip', 'Flat rate for the trip')}
@@ -647,15 +651,15 @@ function CheckoutContent() {
                         className="w-5 h-5 accent-slate-900 rounded cursor-pointer shrink-0 mt-0.5"
                       />
                       <label htmlFor="acceptTermsCheckout" className="text-xs font-bold text-slate-700 leading-relaxed cursor-pointer select-none">
-                        {locale === 'ar' ? 'أوافق على ' : locale === 'fr' ? 'J\'accepte les ' : 'I accept the '}
+                        J'accepte les{' '}
                         <button
                           type="button"
                           onClick={() => setIsTermsModalOpen(true)}
                           className="text-blue-600 underline font-black hover:text-blue-800 transition-colors"
                         >
-                          {locale === 'ar' ? 'الشروط والأحكام العامة للكتراء' : locale === 'fr' ? 'conditions générales de location' : 'general rental terms & conditions'}
+                          conditions générales de location
                         </button>
-                        {locale === 'ar' ? ' والتزم بتقديم الوثائق المطلوبة عند استلام المركبة.' : locale === 'fr' ? ' et je m\'engage à présenter les documents requis lors de la prise en charge du véhicule.' : ' and commit to presenting all required documents upon pickup.'}
+                        {' '}et je m'engage à présenter les documents requis lors de la prise en charge du véhicule.
                       </label>
                     </div>
                   </div>
@@ -728,7 +732,10 @@ function CheckoutContent() {
                       <img src={vehicle.images[0]} alt={vehicle.model} className="w-full h-full object-contain opacity-80" />
                     </div>
                     <div>
-                      <div className="font-black text-sm text-white leading-none">{vehicle.make} {vehicle.model}</div>
+                      <div className="font-black text-sm text-white leading-none flex items-center gap-2">
+                        <BrandLogo brand={vehicle.make} size={16} />
+                        <span>{vehicle.make} {vehicle.model}</span>
+                      </div>
                       <div className="text-xs text-slate-400 font-medium mt-0.5">{vehicle.year} · {vehicle.category === 'Car' ? t('car') : vehicle.category === 'Motorcycle' ? t('motorcycle') : vehicle.category === 'JetSki' ? t('jetski') : vehicle.category}</div>
                     </div>
                   </div>

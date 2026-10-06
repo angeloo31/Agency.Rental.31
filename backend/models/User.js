@@ -16,6 +16,28 @@ const UserSchema = new mongoose.Schema({
     enum: ['Admin', 'Agent'], 
     default: 'Agent',
     required: true
+  },
+  email: {
+    type: String,
+    default: process.env.SMTP_USER || 'yahiakrr@gmail.com',
+    trim: true,
+    lowercase: true,
+  },
+  emailVerified: {
+    type: Boolean,
+    default: false,
+  },
+  twoFactorEnabled: {
+    type: Boolean,
+    default: false,
+  },
+  otpCode: {
+    type: String,
+    default: null,
+  },
+  otpExpires: {
+    type: Date,
+    default: null,
   }
 }, { timestamps: true });
 

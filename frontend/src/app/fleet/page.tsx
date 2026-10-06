@@ -8,9 +8,10 @@ import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/context/LanguageContext';
 import { useBooking } from '@/context/BookingContext';
 import { useSettings } from '@/context/SettingsContext';
+import BrandLogo from '@/components/BrandLogo';
 
 function FleetContent() {
-  const { t, locale } = useLanguage();
+  const { t } = useLanguage();
   const { formatPrice } = useSettings();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -155,11 +156,8 @@ function FleetContent() {
     for (const catObj of categoriesData) {
       if (catObj.subcategories && catObj.subcategories.includes(subEn)) {
         const idx = catObj.subcategories.indexOf(subEn);
-        if (locale === 'fr' && catObj.subcategories_fr && catObj.subcategories_fr[idx]) {
+        if (catObj.subcategories_fr && catObj.subcategories_fr[idx]) {
           return catObj.subcategories_fr[idx];
-        }
-        if (locale === 'ar' && catObj.subcategories_ar && catObj.subcategories_ar[idx]) {
-          return catObj.subcategories_ar[idx];
         }
       }
     }
@@ -167,7 +165,7 @@ function FleetContent() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
       <div className="absolute inset-0 bg-[radial-gradient(circle_500px_at_10%_150px,_var(--tw-gradient-stops))] from-blue-50/50 via-transparent to-transparent pointer-events-none" />
       
       {/* Title Header */}
@@ -297,7 +295,7 @@ function FleetContent() {
                 <label className="font-extrabold text-sm text-slate-700 block mb-4 flex justify-between">
                   <span>{t('maxPrice')}</span>
                   <span className="text-blue-600 font-black">
-                    {maxPrice.toLocaleString(locale === 'ar' ? 'ar-DZ' : 'fr-DZ')} {locale === 'ar' ? 'د.ج' : 'DA'}
+                    {maxPrice.toLocaleString('fr-DZ')} DA
                   </span>
                 </label>
                 <input 
@@ -310,9 +308,9 @@ function FleetContent() {
                   className="w-full accent-blue-600 h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer" 
                 />
                 <div className="flex justify-between text-xs font-bold text-slate-400 mt-2.5">
-                  <span>0 {locale === 'ar' ? 'د.ج' : 'DA'}</span>
+                  <span>0 DA</span>
                   <span>
-                    {(category === 'JetSki' ? 30000 : 100000).toLocaleString(locale === 'ar' ? 'ar-DZ' : 'fr-DZ')} {locale === 'ar' ? 'د.ج' : 'DA'}/{category === 'JetSki' ? (locale === 'ar' ? 'ساعة' : locale === 'fr' ? 'heure' : 'hr') : (locale === 'ar' ? 'يوم' : locale === 'fr' ? 'jour' : 'day')}
+                    {(category === 'JetSki' ? 30000 : 100000).toLocaleString('fr-DZ')} DA/{category === 'JetSki' ? 'heure' : 'jour'}
                   </span>
                 </div>
               </div>
@@ -410,7 +408,7 @@ function FleetContent() {
               <span className="text-xs font-black text-slate-400 uppercase tracking-widest mr-1.5">{t('activeFilters')}</span>
               {maxPrice < (category === 'JetSki' ? 30000 : 100000) && (
                 <div className="inline-flex items-center gap-1.5 bg-blue-50 border border-blue-100 text-blue-700 font-extrabold px-3 py-1 rounded-full text-xs">
-                  Max: {maxPrice.toLocaleString(locale === 'ar' ? 'ar-DZ' : 'fr-DZ')} {locale === 'ar' ? 'د.ج' : 'DA'}/{category === 'JetSki' ? (locale === 'ar' ? 'ساعة' : locale === 'fr' ? 'heure' : 'hr') : (locale === 'ar' ? 'يوم' : locale === 'fr' ? 'jour' : 'day')}
+                  Max: {maxPrice.toLocaleString('fr-DZ')} DA/{category === 'JetSki' ? 'heure' : 'jour'}
                   <button onClick={() => setMaxPrice(category === 'JetSki' ? 30000 : 100000)} className="hover:text-red-500 font-black ml-1 text-sm">×</button>
                 </div>
               )}
@@ -456,12 +454,12 @@ function FleetContent() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
               {filteredVehicles.map((vehicle: any) => (
                 <div 
                   key={vehicle._id} 
                   onClick={() => router.push(`/fleet/${vehicle._id}`)}
-                  className="bg-white border border-slate-200/80 rounded-[2.2rem] overflow-hidden hover:shadow-[0_20px_50px_rgba(15,23,42,0.06)] transition-all duration-500 group flex flex-col shadow-sm cursor-pointer"
+                  className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-[2.2rem] overflow-hidden hover:shadow-[0_20px_50px_rgba(15,23,42,0.06)] transition-all duration-500 group flex flex-col shadow-sm cursor-pointer"
                 >
                   <div className="aspect-[4/3] overflow-hidden relative bg-slate-100 p-2 flex items-center justify-center">
                     <img 
@@ -470,16 +468,16 @@ function FleetContent() {
                       className="w-full h-full object-contain rounded-2xl group-hover:scale-105 transition-transform duration-700"
                     />
                     {vehicle.discount?.percentage > 0 && (
-                      <div className="absolute top-8 left-8 bg-red-500 text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-md">
+                      <div className="absolute top-3 left-3 sm:top-8 sm:left-8 bg-red-500 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest shadow-md">
                         -{vehicle.discount.percentage}% {vehicle.discount.label}
                       </div>
                     )}
-                    <div className="absolute top-8 right-8 flex flex-col items-end gap-1.5">
-                      <div className="bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-black text-slate-900 uppercase tracking-widest shadow-sm border border-slate-100">
+                    <div className="absolute top-3 right-3 sm:top-8 sm:right-8 flex flex-col items-end gap-1 sm:gap-1.5">
+                      <div className="bg-white/90 backdrop-blur-md px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-full text-[8px] sm:text-[10px] font-black text-slate-900 uppercase tracking-widest shadow-sm border border-slate-100">
                         {vehicle.category}
                       </div>
                       {vehicle.subcategory && (
-                        <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider shadow-sm border ${
+                        <div className={`px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-sm border ${
                           vehicle.subcategory === 'Wedding Vehicles'
                             ? 'bg-rose-500 text-white border-rose-600'
                             : 'bg-slate-900 text-white border-slate-950'
@@ -490,29 +488,32 @@ function FleetContent() {
                     </div>
                   </div>
 
-                  <div className="p-8 flex-1 flex flex-col justify-between">
+                  <div className="p-3.5 sm:p-8 flex-1 flex flex-col justify-between">
                     <div>
-                      <div className="flex justify-between items-start mb-6">
+                      <div className="flex justify-between items-start mb-3 sm:mb-6">
                         <div>
-                          <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none mb-2">{vehicle.make}</h3>
-                          <p className="text-slate-500 text-sm font-bold">{vehicle.model} &bull; {vehicle.year}</p>
+                          <h3 className="text-sm sm:text-2xl font-black text-slate-900 tracking-tight leading-none mb-1 sm:mb-2 flex items-center gap-1.5 sm:gap-2">
+                            <BrandLogo brand={vehicle.make} size={18} />
+                            <span>{vehicle.make}</span>
+                          </h3>
+                          <p className="text-slate-500 text-[10px] sm:text-sm font-bold">{vehicle.model} &bull; {vehicle.year}</p>
                         </div>
                         <div className="text-right">
                           {vehicle.discount?.percentage > 0 ? (
                             <>
-                              <span className="text-xs text-slate-400 line-through font-bold block leading-none mb-1">
+                              <span className="text-[9px] sm:text-xs text-slate-400 line-through font-bold block leading-none mb-0.5">
                                 {formatPrice(vehicle.pricePerDay || vehicle.pricePerHour)}
                               </span>
-                              <span className="text-2xl font-black text-red-500">
+                              <span className="text-sm sm:text-2xl font-black text-red-500">
                                 {formatPrice((vehicle.pricePerDay || vehicle.pricePerHour) * (1 - vehicle.discount.percentage / 100))}
                               </span>
                             </>
                           ) : (
-                            <span className="text-2xl font-black text-blue-600">
+                            <span className="text-sm sm:text-2xl font-black text-blue-600">
                               {formatPrice(vehicle.pricePerDay || vehicle.pricePerHour)}
                             </span>
                           )}
-                           <span className="text-xs text-slate-400 font-bold block mt-0.5">
+                           <span className="text-[9px] sm:text-xs text-slate-400 font-bold block mt-0.5">
                             /{vehicle.pricePerDay 
                               ? t('dayCountUnit')
                               : t('hourCountUnit')
@@ -522,36 +523,36 @@ function FleetContent() {
                       </div>
                       
                       {/* Specifications badges */}
-                      <div className="flex flex-wrap items-center gap-2 mb-8">
+                      <div className="flex flex-wrap items-center gap-1 sm:gap-2 mb-3 sm:mb-8">
                         {vehicle.features?.transmission && (
-                          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-150/50 px-3 py-2 rounded-xl text-xs font-bold text-slate-600">
-                            <Settings className="w-3.8 h-3.8 text-blue-500" /> 
+                          <div className="flex items-center gap-1 sm:gap-1.5 bg-slate-50 border border-slate-150/50 px-2 py-1 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold text-slate-600">
+                            <Settings className="w-3 h-3 sm:w-3.8 sm:h-3.8 text-blue-500" /> 
                             {vehicle.features.transmission === 'Automatic' ? t('automatic') : t('manual')}
                           </div>
                         )}
                         {vehicle.features?.fuel && (
-                          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-150/50 px-3 py-2 rounded-xl text-xs font-bold text-slate-600">
-                            <Fuel className="w-3.8 h-3.8 text-blue-500" /> 
+                          <div className="flex items-center gap-1 sm:gap-1.5 bg-slate-50 border border-slate-150/50 px-2 py-1 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold text-slate-600">
+                            <Fuel className="w-3 h-3 sm:w-3.8 sm:h-3.8 text-blue-500" /> 
                             {vehicle.features.fuel === 'Petrol' ? t('petrol') : t(vehicle.features.fuel.toLowerCase()) || vehicle.features.fuel}
                           </div>
                         )}
                         {vehicle.features?.doors && (
-                          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-150/50 px-3 py-2 rounded-xl text-xs font-bold text-slate-600">
-                            <Users className="w-3.8 h-3.8 text-blue-500" /> {vehicle.features.doors} {t('doorsLabel')}
+                          <div className="flex items-center gap-1 sm:gap-1.5 bg-slate-50 border border-slate-150/50 px-2 py-1 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold text-slate-600">
+                            <Users className="w-3 h-3 sm:w-3.8 sm:h-3.8 text-blue-500" /> {vehicle.features.doors} {t('doorsLabel')}
                           </div>
                         )}
                         {vehicle.features?.cc && (
-                          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-150/50 px-3 py-2 rounded-xl text-xs font-bold text-slate-600">
-                            <Activity className="w-3.8 h-3.8 text-blue-500" /> {vehicle.features.cc}cc
+                          <div className="flex items-center gap-1 sm:gap-1.5 bg-slate-50 border border-slate-150/50 px-2 py-1 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold text-slate-600">
+                            <Activity className="w-3 h-3 sm:w-3.8 sm:h-3.8 text-blue-500" /> {vehicle.features.cc}cc
                           </div>
                         )}
                       </div>
                     </div>
 
                     <div 
-                      className="w-full bg-slate-900 group-hover:bg-blue-600 text-white py-4.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-950/5 group-hover:shadow-blue-600/20"
+                      className="w-full bg-slate-900 group-hover:bg-blue-600 text-white py-2.5 sm:py-4.5 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 sm:gap-2 shadow-lg shadow-slate-950/5 group-hover:shadow-blue-600/20"
                     >
-                      {t('reserveNow')} <ArrowRight className="w-4.5 h-4.5 group-hover:translate-x-1 transition-transform" />
+                      {t('reserveNow')} <ArrowRight className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </div>

@@ -10,10 +10,11 @@ import {
 } from 'lucide-react';
 import { useSettings } from '@/context/SettingsContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { ChatbotWidget } from '@/components/ChatbotWidget';
 
 export function LayoutShell({ children }: { children: React.ReactNode }) {
   const { settings } = useSettings();
-  const { t, locale } = useLanguage();
+  const { t } = useLanguage();
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith('/admin');
 
@@ -310,6 +311,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
 
         </div>
       </footer>
+      <ChatbotWidget />
     </>
   );
 }

@@ -22,7 +22,7 @@ interface CategoriesTabProps {
 }
 
 export default function CategoriesTab({ categories, refreshCategories, token }: CategoriesTabProps) {
-  const { t, locale } = useLanguage();
+  const { t } = useLanguage();
   const { confirm } = useConfirm();
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState<string | null>(null);
@@ -41,7 +41,8 @@ export default function CategoriesTab({ categories, refreshCategories, token }: 
       const res = await fetch(`/api/categories/${categoryId}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify({ isVisible: !currentVisibility })
       });
@@ -61,7 +62,9 @@ export default function CategoriesTab({ categories, refreshCategories, token }: 
     try {
       const res = await fetch(`/api/categories/${categoryId}`, {
         method: 'DELETE',
-        headers: { }
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
       });
       if (res.ok) {
         refreshCategories();
@@ -91,7 +94,8 @@ export default function CategoriesTab({ categories, refreshCategories, token }: 
       const res = await fetch(`/api/categories/${categoryId}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify({ name: editName, subcategories: editSubcategories })
       });
@@ -116,7 +120,8 @@ export default function CategoriesTab({ categories, refreshCategories, token }: 
       const res = await fetch(`/api/categories`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify({ name: newName, isVisible: true, subcategories: [] })
       });
@@ -265,7 +270,7 @@ export default function CategoriesTab({ categories, refreshCategories, token }: 
                 <div>
                   <div className="flex items-center gap-4 mb-2">
                     <h3 className="text-2xl font-black text-slate-900">
-                      {locale === 'fr' ? (category.name_fr || category.name) : locale === 'ar' ? (category.name_ar || category.name) : category.name}
+                      {category.name_fr || category.name}
                     </h3>
                     <button 
                       onClick={() => toggleVisibility(category._id, category.isVisible)}
@@ -285,11 +290,7 @@ export default function CategoriesTab({ categories, refreshCategories, token }: 
                       <span className="text-sm font-semibold text-slate-500 italic">{t('none')}</span>
                     ) : (
                       category.subcategories.map((sub, idx) => {
-                        const subDisp = locale === 'fr' && (category as any).subcategories_fr?.[idx]
-                          ? (category as any).subcategories_fr[idx]
-                          : locale === 'ar' && (category as any).subcategories_ar?.[idx]
-                          ? (category as any).subcategories_ar[idx]
-                          : sub;
+                        const subDisp = (category as any).subcategories_fr?.[idx] || sub;
                         return (
                           <span key={sub} className="bg-slate-50 border border-slate-200 text-slate-600 font-bold px-3 py-1 rounded-lg text-xs">
                             {subDisp}

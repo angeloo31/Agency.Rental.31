@@ -13,6 +13,7 @@ import {
   Copy, UserCheck, ChevronDown, Award, Sparkle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import BrandLogo from '@/components/BrandLogo';
 
 export default function VehicleDetailPage() {
   const params = useParams();
@@ -21,10 +22,8 @@ export default function VehicleDetailPage() {
   const { formatPrice } = useSettings();
   const { bookingData, setBookingData, setCurrentStep } = useBooking();
 
-  const getLocalizedField = (fieldEn: string, fieldFr?: string, fieldAr?: string) => {
-    if (locale === 'fr') return fieldFr || fieldEn || '';
-    if (locale === 'ar') return fieldAr || fieldEn || '';
-    return fieldEn || '';
+  const getLocalizedField = (fieldEn: string, fieldFr?: string) => {
+    return fieldFr || fieldEn || '';
   };
 
   const [vehicle, setVehicle] = useState<any>(null);
@@ -218,14 +217,14 @@ export default function VehicleDetailPage() {
     e.preventDefault();
 
     if (!pickupDate || !pickupTime || !returnDate || !returnTime || !pickupLocation) {
-      toast.error(locale === 'fr' ? 'Veuillez remplir tous les champs (Lieu, Date et Heure)' : 'Please fill all location and date/time fields');
+      toast.error('Veuillez remplir tous les champs (Lieu, Date et Heure)');
       return;
     }
 
     const start = new Date(`${pickupDate}T${pickupTime}`);
     const end = new Date(`${returnDate}T${returnTime}`);
     if (start >= end) {
-      toast.error(locale === 'fr' ? 'La date de retour doit être après la date de départ' : 'Return date & time must be after pickup date & time');
+      toast.error('La date de retour doit être après la date de départ');
       return;
     }
 
@@ -272,8 +271,8 @@ export default function VehicleDetailPage() {
         <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-400">
           <Car className="w-10 h-10" />
         </div>
-        <h2 className="text-2xl font-black text-slate-800 mb-2">{locale === 'fr' ? 'Véhicule non trouvé' : 'Vehicle not found'}</h2>
-        <p className="text-slate-500 mb-8 text-sm">{locale === 'fr' ? 'Le véhicule demandé n\'existe pas ou n\'est plus disponible.' : 'The requested vehicle does not exist or is no longer available.'}</p>
+        <h2 className="text-2xl font-black text-slate-800 mb-2">Véhicule non trouvé</h2>
+        <p className="text-slate-500 mb-8 text-sm">Le véhicule demandé n'existe pas ou n'est plus disponible.</p>
         <Link href="/fleet" className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors">
           {t('viewAllFleet', 'Explore Fleet')}
         </Link>
@@ -281,26 +280,26 @@ export default function VehicleDetailPage() {
     );
   }
 
-  const localizedDesc = getLocalizedField(vehicle.description, vehicle.description_fr, vehicle.description_ar);
-  const localizedReqs = getLocalizedField(vehicle.requirements, vehicle.requirements_fr, vehicle.requirements_ar);
-  const localizedConds = getLocalizedField(vehicle.conditions, vehicle.conditions_fr, vehicle.conditions_ar);
+  const localizedDesc = getLocalizedField(vehicle.description, vehicle.description_fr);
+  const localizedReqs = getLocalizedField(vehicle.requirements, vehicle.requirements_fr);
+  const localizedConds = getLocalizedField(vehicle.conditions, vehicle.conditions_fr);
 
   const defaultFaqs = [
     {
-      q: locale === 'fr' ? 'Comment se déroule le paiement ?' : locale === 'ar' ? 'كيف يتم الدفع؟' : 'How does payment work?',
-      a: locale === 'fr' ? 'Aucune carte de crédit n\'est requise en ligne. Le paiement s\'effectue intégralement sur place lors de la prise en charge du véhicule.' : locale === 'ar' ? 'لا يلزم وجود بطاقة ائتمان عبر الإنترنت. يتم الدفع بالكامل في الموقع عند استلام المركبة.' : 'Zero credit card required online. You pay 100% on-site upon vehicle pickup.'
+      q: 'Comment se déroule le paiement ?',
+      a: 'Aucune carte de crédit n\'est requise en ligne. Le paiement s\'effectue intégralement sur place lors de la prise en charge du véhicule.'
     },
     {
-      q: locale === 'fr' ? 'Quels documents dois-je fournir ?' : locale === 'ar' ? 'ما هي الوثائق المطلوبة؟' : 'What documents are required?',
-      a: locale === 'fr' ? 'Vous devrez présenter un permis de conduire valide (min 1 à 2 ans selon le véhicule) ainsi qu\'une pièce d\'identité / passeport en cours de validité.' : locale === 'ar' ? 'ستحتاج إلى تقديم رخصة قيادة سارية ووثيقة إثبات شخصية أو جواز سفر ساري المفعول.' : 'Valid driving license and passport / national ID upon vehicle key handover.'
+      q: 'Quels documents dois-je fournir ?',
+      a: 'Vous devrez présenter un permis de conduire valide (min 1 à 2 ans selon le véhicule) ainsi qu\'une pièce d\'identité / passeport en cours de validité.'
     },
     {
-      q: locale === 'fr' ? 'Comment fonctionne la caution ?' : locale === 'ar' ? 'كيف تعمل الكفالة / مبلغ الضمان؟' : 'How does the security deposit work?',
-      a: locale === 'fr' ? 'Le montant de la caution (optionnelle selon les modèles) est consigné à l\'agence et restitué intégralement lors du retour de la véhicule sans dommage.' : locale === 'ar' ? 'مبلغ الضمان مسترد بالكامل فور إرجاع المركبة بحالة جيدة.' : 'The refundable caution deposit is handled at pickup and fully returned when returning the vehicle.'
+      q: 'Comment fonctionne la caution ?',
+      a: 'Le montant de la caution est consigné à l\'agence et restitué intégralement lors du retour du véhicule sans dommage.'
     },
     {
-      q: locale === 'fr' ? 'Puis-je annuler ou modifier ma réservation ?' : locale === 'ar' ? 'هل يمكنني إلغاء أو تعديل الحجز؟' : 'Can I cancel or modify my reservation?',
-      a: locale === 'fr' ? 'Oui, l\'annulation est 100% gratuite à tout moment avant l\'heure de prise en charge sans aucun frais.' : locale === 'ar' ? 'نعم، الإلغاء مجاني تماماً في أي وقت قبل الموعد.' : 'Yes, cancellation is 100% free anytime before your scheduled pickup.'
+      q: 'Puis-je annuler ou modifier ma réservation ?',
+      a: 'Oui, l\'annulation est 100% gratuite à tout moment avant l\'heure de prise en charge sans aucun frais.'
     }
   ];
 
@@ -472,8 +471,9 @@ export default function VehicleDetailPage() {
             <div className="mb-8">
               <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
                 <div>
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-                    {vehicle.make} <span className="text-blue-600">{vehicle.model}</span>
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight flex items-center gap-3">
+                    <BrandLogo brand={vehicle.make} size={36} />
+                    <span>{vehicle.make} <span className="text-blue-600">{vehicle.model}</span></span>
                   </h1>
                   <p className="text-slate-400 font-extrabold text-sm uppercase tracking-wider mt-1">
                     {vehicle.year} {t('editionLabel', 'Edition')} • {vehicle.category}
@@ -544,18 +544,18 @@ export default function VehicleDetailPage() {
               {[
                 { 
                   id: 'overview', 
-                  shortLabel: locale === 'fr' ? 'Aperçu' : locale === 'ar' ? 'نظرة عامة' : 'Overview',
-                  fullLabel: t('overviewTab', 'Overview') 
+                  shortLabel: 'Aperçu',
+                  fullLabel: t('overviewTab', 'Aperçu') 
                 },
                 { 
                   id: 'specs', 
-                  shortLabel: locale === 'fr' ? 'Specs' : locale === 'ar' ? 'المواصفات' : 'Specs',
-                  fullLabel: t('specifications', 'Specifications') 
+                  shortLabel: 'Specs',
+                  fullLabel: t('specifications', 'Spécifications') 
                 },
                 { 
                   id: 'rules', 
-                  shortLabel: locale === 'fr' ? 'Règlement' : locale === 'ar' ? 'الشروط' : 'Rules & Caution',
-                  fullLabel: locale === 'fr' ? 'Règlement & Caution' : t('rentalRules', 'Rental Rules & Caution') 
+                  shortLabel: 'Règlement',
+                  fullLabel: 'Règlement & Caution' 
                 },
                 { 
                   id: 'faq', 
@@ -610,11 +610,7 @@ export default function VehicleDetailPage() {
                       <p className="text-slate-500 italic text-sm">
                         {t(
                           'defaultVehicleDesc',
-                          locale === 'fr' 
-                            ? `Véhicule d'exception révisé avec soin par nos équipes d'experts ${siteSettings?.storeName || 'LuxeRent'}.` 
-                            : locale === 'ar'
-                            ? `مركبة ممتازة تمت معاينتها بعناية من طرف فريق خبرائنا في ${siteSettings?.storeName || 'LuxeRent'}.`
-                            : `Prestige vehicle carefully inspected by our expert team at ${siteSettings?.storeName || 'LuxeRent'}.`
+                          `Véhicule d'exception révisé avec soin par nos équipes d'experts ${siteSettings?.storeName || 'LuxeRent'}.`
                         )}
                       </p>
                     )}
@@ -687,23 +683,12 @@ export default function VehicleDetailPage() {
                       </div>
                     ) : null}
                     <ul className="space-y-3 text-sm font-semibold text-slate-700">
-                      {localizedReqs ? localizedReqs.split('\n').filter((l:string)=>l.trim()).map((req: string, idx: number) => (
+                      {(localizedReqs || (siteSettings?.defaultRequirements?.fr || 'Permis de conduire valide (min 1 à 2 ans)\nPièce d\'identité ou Passeport valide')).split('\n').filter((l:string)=>l.trim()).map((req: string, idx: number) => (
                         <li key={idx} className="flex gap-2.5 items-start">
                           <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                           <span>{req}</span>
                         </li>
-                      )) : (
-                        <>
-                          <li className="flex gap-2.5 items-start">
-                            <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                            <span>{locale === 'fr' ? 'Permis de conduire valide (min 1 à 2 ans)' : 'Valid Driving License (Min 1 to 2 years)'}</span>
-                          </li>
-                          <li className="flex gap-2.5 items-start">
-                            <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                            <span>{locale === 'fr' ? 'Pièce d\'identité ou Passeport valide' : 'Valid National ID or Passport'}</span>
-                          </li>
-                        </>
-                      )}
+                      ))}
                     </ul>
                   </div>
 
@@ -713,23 +698,12 @@ export default function VehicleDetailPage() {
                       <Shield className="w-5 h-5 text-amber-600" /> {t('conditionsLabel', 'Rental Terms')}
                     </h4>
                     <ul className="space-y-3 text-sm font-semibold text-slate-700">
-                      {localizedConds ? localizedConds.split('\n').filter((l:string)=>l.trim()).map((cond: string, idx: number) => (
+                      {(localizedConds || (siteSettings?.defaultConditions?.fr || 'Restitution avec le même niveau de carburant\nVéhicule non-fumeur')).split('\n').filter((l:string)=>l.trim()).map((cond: string, idx: number) => (
                         <li key={idx} className="flex gap-2.5 items-start">
                           <CheckCircle2 className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                           <span>{cond}</span>
                         </li>
-                      )) : (
-                        <>
-                          <li className="flex gap-2.5 items-start">
-                            <CheckCircle2 className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                            <span>{locale === 'fr' ? 'Restitution avec le même niveau de carburant' : 'Return with same fuel level'}</span>
-                          </li>
-                          <li className="flex gap-2.5 items-start">
-                            <CheckCircle2 className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                            <span>{locale === 'fr' ? 'Véhicule non-fumeur' : 'Strict Non-Smoking vehicle policy'}</span>
-                          </li>
-                        </>
-                      )}
+                      ))}
                     </ul>
                   </div>
                 </div>
@@ -827,7 +801,7 @@ export default function VehicleDetailPage() {
                     )}
                   </span>
                   <span className="text-slate-400 font-extrabold text-xs uppercase tracking-wider">
-                    /{vehicle.pricePerDay ? (locale === 'ar' ? 'يوم' : locale === 'fr' ? 'jour' : 'day') : (locale === 'ar' ? 'ساعة' : locale === 'fr' ? 'heure' : 'hour')}
+                    /{vehicle.pricePerDay ? 'jour' : 'heure'}
                   </span>
                 </div>
               </div>

@@ -6,7 +6,7 @@ import { useConfirm } from '@/context/ConfirmContext';
 import toast from 'react-hot-toast';
 
 export default function ExtraOptionsTab() {
-  const { t, locale } = useLanguage();
+  const { t } = useLanguage();
   const { token } = useAuth();
   const { confirm } = useConfirm();
   
@@ -19,7 +19,6 @@ export default function ExtraOptionsTab() {
   // Form States
   const [name, setName] = useState('');
   const [nameFr, setNameFr] = useState('');
-  const [nameAr, setNameAr] = useState('');
   const [price, setPrice] = useState(0);
   const [priceType, setPriceType] = useState('flat_rate');
   const [applicableTo, setApplicableTo] = useState('All');
@@ -61,7 +60,6 @@ export default function ExtraOptionsTab() {
     setEditingOption(null);
     setName('');
     setNameFr('');
-    setNameAr('');
     setPrice(0);
     setPriceType('flat_rate');
     setApplicableTo('All');
@@ -74,7 +72,6 @@ export default function ExtraOptionsTab() {
     setEditingOption(opt);
     setName(opt.name || '');
     setNameFr(opt.name_fr || '');
-    setNameAr(opt.name_ar || '');
     setPrice(opt.price);
     setPriceType(opt.priceType || 'flat_rate');
     setApplicableTo(opt.applicableTo);
@@ -87,8 +84,7 @@ export default function ExtraOptionsTab() {
     e.preventDefault();
     const body = {
       name,
-      name_fr: nameFr,
-      name_ar: nameAr,
+      name_fr: nameFr || name,
       price,
       priceType,
       applicableTo,
@@ -101,7 +97,10 @@ export default function ExtraOptionsTab() {
       const method = editingOption ? 'PUT' : 'POST';
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify(body)
       });
       if (res.ok) {
@@ -109,7 +108,8 @@ export default function ExtraOptionsTab() {
         fetchOptions();
         toast.success('Option saved successfully');
       } else {
-        toast.error('Failed to save extra option.');
+        const errData = await res.json().catch(() => ({}));
+        toast.error(errData.error || 'Failed to save extra option.');
       }
     } catch (err) {
       console.error(err);
@@ -123,10 +123,15 @@ export default function ExtraOptionsTab() {
     try {
       const res = await fetch(`/api/extra-options/${id}`, {
         method: 'DELETE',
-        headers: { }
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
       });
       if (res.ok) {
         fetchOptions();
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        toast.error(errData.error || 'Failed to delete extra option.');
       }
     } catch (err) {
       console.error(err);
@@ -137,7 +142,10 @@ export default function ExtraOptionsTab() {
     try {
       const res = await fetch(`/api/extra-options/${id}/status`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({ isActive: !currentStatus })
       });
       if (res.ok) {
@@ -187,7 +195,7 @@ export default function ExtraOptionsTab() {
                 </tr>
               ) : (
                 options.map((opt) => {
-                  const optDisplayName = locale === 'fr' ? (opt.name_fr || opt.name) : locale === 'ar' ? (opt.name_ar || opt.name) : opt.name;
+                  const optDisplayName = opt.name_fr || opt.name;
                   return (
                     <tr key={opt._id} className="hover:bg-slate-50/50 transition-colors group">
                       <td className="px-8 py-5 font-black text-slate-900">{optDisplayName}</td>

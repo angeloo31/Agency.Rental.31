@@ -4,11 +4,11 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
-import { Car, Menu, X, ChevronRight, Home, Shield, Info, MapPin } from 'lucide-react';
+import { Car, Menu, X, ChevronRight, Home, Shield, Info, MapPin, DollarSign } from 'lucide-react';
 import { useSettings } from '@/context/SettingsContext';
 
 export function Header() {
-  const { settings } = useSettings();
+  const { settings, selectedCurrency, setSelectedCurrency } = useSettings();
   const { t } = useLanguage();
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith('/admin');
@@ -17,6 +17,8 @@ export function Header() {
 
   const toggleMobileMenu = () => setMobileMenuOpen(prev => !prev);
   const closeMobileMenu = () => setMobileMenuOpen(false);
+
+  const enabledCurrencies = settings?.currencies?.enabled || ['DA'];
 
   const navLinks = [
     { name: t('home', 'Home'), href: '/', icon: Home },
@@ -61,7 +63,7 @@ export function Header() {
         </Link>
 
         {/* Desktop Navigation & Actions */}
-        <div className="flex items-center gap-3 sm:gap-6 md:gap-8 flex-row">
+        <div className="flex items-center gap-3 sm:gap-4 md:gap-6 flex-row">
           
           <nav className="hidden md:flex items-center gap-2 font-bold text-sm text-slate-600 flex-row">
             {isAdmin ? (
@@ -94,6 +96,29 @@ export function Header() {
               </>
             )}
           </nav>
+
+          {/* Desktop Currency Switcher */}
+          {enabledCurrencies.length > 1 && (
+            <div className="hidden sm:flex items-center gap-1 bg-slate-100/90 p-1 rounded-full border border-slate-200/80 shadow-inner">
+              {enabledCurrencies.map((curr) => {
+                const isSelected = selectedCurrency === curr;
+                return (
+                  <button
+                    key={curr}
+                    type="button"
+                    onClick={() => setSelectedCurrency(curr as any)}
+                    className={`px-3 py-1 rounded-full text-xs font-black transition-all ${
+                      isSelected
+                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                    }`}
+                  >
+                    {curr === 'DA' ? 'DA' : curr === 'EUR' ? '€ EUR' : '$ USD'}
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           {/* Mobile Hamburger Menu Trigger Button */}
           <button
@@ -148,11 +173,37 @@ export function Header() {
               )}
             </div>
 
+            {/* Mobile Currency Selector */}
+            {enabledCurrencies.length > 1 && (
+              <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between px-2">
+                <span className="text-xs font-bold text-slate-500">Devise :</span>
+                <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                  {enabledCurrencies.map((curr) => {
+                    const isSelected = selectedCurrency === curr;
+                    return (
+                      <button
+                        key={curr}
+                        type="button"
+                        onClick={() => setSelectedCurrency(curr as any)}
+                        className={`px-3 py-1 rounded-lg text-xs font-black transition-all ${
+                          isSelected
+                            ? 'bg-indigo-600 text-white shadow-sm'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        {curr === 'DA' ? 'DA' : curr === 'EUR' ? '€ EUR' : '$ USD'}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Quick Mobile Contact Callout */}
-            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between px-2">
+            <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between px-2">
               <span className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">{settings?.storeName || 'LuxeRent'}</span>
               <span className="text-xs font-black text-emerald-600 flex items-center gap-1.5 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
-                <Shield className="w-3.5 h-3.5" /> 100% Pay On Pickup
+                <Shield className="w-3.5 h-3.5" /> 100% Paiement sur place
               </span>
             </div>
           </div>
@@ -162,3 +213,4 @@ export function Header() {
     </div>
   );
 }
+

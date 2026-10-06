@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Image as ImageIcon, MapPin, Plus, Trash2, Globe2, Sparkles, Film, Layout } from 'lucide-react';
+import { Save, Image as ImageIcon, MapPin, Plus, Trash2, Globe2, Sparkles, Film, Layout, Lock, Shield, Key, Mail, CheckCircle2, ShieldAlert, ShieldCheck, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
+import { useSettings } from '@/context/SettingsContext';
 import toast from 'react-hot-toast';
 import ImageCropperModal from '@/components/ImageCropperModal';
 
@@ -15,13 +17,205 @@ const PRESET_BACKGROUNDS = [
 
 export default function SettingsTab() {
   const router = useRouter();
-  const { t, locale } = useLanguage();
+  const { t } = useLanguage();
+  const { username: currentAuthUsername, token } = useAuth();
+  const { refreshSettings } = useSettings();
   const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [activeSection, setActiveSection] = useState<'general' | 'hero' | 'about' | 'footer' | 'locations' | 'faq' | 'currencies'>('general');
+  const [activeSection, setActiveSection] = useState<'general' | 'hero' | 'about' | 'footer' | 'locations' | 'faq' | 'currencies' | 'security'>('general');
   const [activeCropFile, setActiveCropFile] = useState<File | null>(null);
+
+  // Security credentials change state
+  const [securityForm, setSecurityForm] = useState({
+    newUsername: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [updatingSecurity, setUpdatingSecurity] = useState(false);
+
+  // 2FA & Email Verification states
+  const [adminEmail, setAdminEmail] = useState('admin@luxerent.com');
+  const [originalAdminEmail, setOriginalAdminEmail] = useState('admin@luxerent.com');
+  const [updatingEmail, setUpdatingEmail] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [toggling2FA, setToggling2FA] = useState(false);
+
+  // Email verification modal states
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [emailCodeInput, setEmailCodeInput] = useState('');
+  const [sendingEmailCode, setSendingEmailCode] = useState(false);
+  const [verifyingEmailCode, setVerifyingEmailCode] = useState(false);
+  const [devVerificationCode, setDevVerificationCode] = useState('');
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.email) {
+            setAdminEmail(data.email);
+            setOriginalAdminEmail(data.email);
+          }
+          setEmailVerified(!!data.emailVerified);
+          setTwoFactorEnabled(!!data.twoFactorEnabled);
+        }
+      } catch (e) {
+        console.error('Error fetching admin profile info:', e);
+      }
+    };
+    fetchUserData();
+  }, []);
+
+  const handleToggle2FA = async (newVal: boolean) => {
+    setToggling2FA(true);
+    try {
+      const res = await fetch('/api/auth/toggle-2fa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: newVal, email: adminEmail }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTwoFactorEnabled(data.twoFactorEnabled);
+        toast.success(data.message || 'Statut 2FA mis à jour !');
+      } else {
+        toast.error(data.error || 'Échec de la mise à jour 2FA.');
+      }
+    } catch (e) {
+      toast.error('Erreur lors du changement 2FA.');
+    } finally {
+      setToggling2FA(false);
+    }
+  };
+
+  const handleUpdateEmail = async () => {
+    if (adminEmail === originalAdminEmail) return;
+    setUpdatingEmail(true);
+    try {
+      const res = await fetch('/api/auth/update-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: adminEmail }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setOriginalAdminEmail(data.email);
+        setAdminEmail(data.email);
+        setEmailVerified(data.emailVerified);
+        toast.success(data.message || 'E-mail mis à jour !');
+      } else {
+        toast.error(data.error || 'Échec de la mise à jour.');
+      }
+    } catch (e) {
+      toast.error('Erreur de mise à jour.');
+    } finally {
+      setUpdatingEmail(false);
+    }
+  };
+
+  const handleSendVerificationEmail = async () => {
+    setSendingEmailCode(true);
+    try {
+      const res = await fetch('/api/auth/send-verification-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setDevVerificationCode(data.devOtpCode || '');
+        setShowVerifyModal(true);
+        toast.success('Code de vérification envoyé à votre adresse e-mail !');
+      } else {
+        toast.error(data.error || 'Échec de l\'envoi du code.');
+      }
+    } catch (e) {
+      toast.error('Erreur lors de l\'envoi du code.');
+    } finally {
+      setSendingEmailCode(false);
+    }
+  };
+
+  const handleVerifyEmailCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setVerifyingEmailCode(true);
+    try {
+      const res = await fetch('/api/auth/verify-email-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: emailCodeInput }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setEmailVerified(true);
+        setShowVerifyModal(false);
+        setEmailCodeInput('');
+        toast.success(data.message || 'Adresse e-mail vérifiée !');
+      } else {
+        toast.error(data.error || 'Code incorrect.');
+      }
+    } catch (e) {
+      toast.error('Erreur de vérification.');
+    } finally {
+      setVerifyingEmailCode(false);
+    }
+  };
+
+  const handleUpdateSecurity = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!securityForm.currentPassword) {
+      toast.error('Veuillez saisir votre mot de passe actuel pour valider.');
+      return;
+    }
+
+    if (securityForm.newPassword && securityForm.newPassword !== securityForm.confirmPassword) {
+      toast.error('Le nouveau mot de passe et sa confirmation ne correspondent pas.');
+      return;
+    }
+
+    if (!securityForm.newUsername && !securityForm.newPassword) {
+      toast.error('Veuillez saisir un nouveau nom d\'utilisateur ou un nouveau mot de passe.');
+      return;
+    }
+
+    setUpdatingSecurity(true);
+    try {
+      const res = await fetch('/api/auth/change-credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: securityForm.currentPassword,
+          newUsername: securityForm.newUsername || undefined,
+          newPassword: securityForm.newPassword || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message || 'Identifiants mis à jour avec succès !');
+        setSecurityForm({
+          newUsername: '',
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+        setTimeout(() => {
+          window.location.reload();
+        }, 1200);
+      } else {
+        toast.error(data.error || 'Échec de la mise à jour des identifiants.');
+      }
+    } catch (error) {
+      console.error('Error changing credentials:', error);
+      toast.error('Erreur réseau lors de la mise à jour.');
+    } finally {
+      setUpdatingSecurity(false);
+    }
+  };
 
   const fetchSettings = async () => {
     try {
@@ -40,7 +234,7 @@ export default function SettingsTab() {
             },
             {
               q: "Comment fonctionne la caution ?",
-              a: "Le montant de la caution (optionnelle selon les modèles) est consigné à l'agence et restitué intégralement lors du retour de la véhicule sans dommage."
+              a: "Le montant de la caution est consigné à l'agence et restitué intégralement lors du retour du véhicule sans dommage."
             },
             {
               q: "Puis-je annuler ou modifier ma réservation ?",
@@ -67,15 +261,21 @@ export default function SettingsTab() {
       const res = await fetch('/api/settings', {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
+        credentials: 'include',
         body: JSON.stringify(settings)
       });
       if (res.ok) {
+        const updated = await res.json();
+        setSettings(updated);
+        await refreshSettings();
         toast.success(t('settingsSaved'));
         router.refresh();
       } else {
-        toast.error(t('settingsSaveFailed'));
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.error || t('settingsSaveFailed'));
       }
     } catch (error) {
       console.error(error);
@@ -300,27 +500,30 @@ export default function SettingsTab() {
 
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Sidebar Navigation Menu */}
-        <div className="w-full lg:w-64 shrink-0 flex flex-col gap-2">
-          <button onClick={() => setActiveSection('general')} className={`p-4 rounded-2xl text-left font-bold transition-all ${activeSection === 'general' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/60'}`}>
+        <div className="w-full lg:w-64 shrink-0 flex flex-row lg:flex-col overflow-x-auto pb-2 lg:pb-0 gap-2 custom-scrollbar">
+          <button onClick={() => setActiveSection('general')} className={`px-4 py-3 lg:p-4 rounded-2xl text-left font-bold transition-all whitespace-nowrap shrink-0 text-sm lg:text-base ${activeSection === 'general' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/60'}`}>
             {t('generalSettings')}
           </button>
-          <button onClick={() => setActiveSection('hero')} className={`p-4 rounded-2xl text-left font-bold transition-all ${activeSection === 'hero' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/60'}`}>
+          <button onClick={() => setActiveSection('hero')} className={`px-4 py-3 lg:p-4 rounded-2xl text-left font-bold transition-all whitespace-nowrap shrink-0 text-sm lg:text-base ${activeSection === 'hero' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/60'}`}>
             {t('heroAndBranding')}
           </button>
-          <button onClick={() => setActiveSection('about')} className={`p-4 rounded-2xl text-left font-bold transition-all ${activeSection === 'about' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/60'}`}>
+          <button onClick={() => setActiveSection('about')} className={`px-4 py-3 lg:p-4 rounded-2xl text-left font-bold transition-all whitespace-nowrap shrink-0 text-sm lg:text-base ${activeSection === 'about' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/60'}`}>
             {t('aboutUsTab')}
           </button>
-          <button onClick={() => setActiveSection('footer')} className={`p-4 rounded-2xl text-left font-bold transition-all ${activeSection === 'footer' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/60'}`}>
+          <button onClick={() => setActiveSection('footer')} className={`px-4 py-3 lg:p-4 rounded-2xl text-left font-bold transition-all whitespace-nowrap shrink-0 text-sm lg:text-base ${activeSection === 'footer' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/60'}`}>
             Footer & Animation
           </button>
-          <button onClick={() => setActiveSection('locations')} className={`p-4 rounded-2xl text-left font-bold transition-all ${activeSection === 'locations' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/60'}`}>
+          <button onClick={() => setActiveSection('locations')} className={`px-4 py-3 lg:p-4 rounded-2xl text-left font-bold transition-all whitespace-nowrap shrink-0 text-sm lg:text-base ${activeSection === 'locations' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/60'}`}>
             {t('agencyLocationsTab')}
           </button>
-          <button onClick={() => setActiveSection('faq')} className={`p-4 rounded-2xl text-left font-bold transition-all ${activeSection === 'faq' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/60'}`}>
-            ❓ FAQ (Frequently Asked Questions)
+          <button onClick={() => setActiveSection('faq')} className={`px-4 py-3 lg:p-4 rounded-2xl text-left font-bold transition-all whitespace-nowrap shrink-0 text-sm lg:text-base ${activeSection === 'faq' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/60'}`}>
+            ❓ FAQ
           </button>
-          <button onClick={() => setActiveSection('currencies')} className={`p-4 rounded-2xl text-left font-bold transition-all ${activeSection === 'currencies' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/60'}`}>
-            💰 Currency & Rates (DA / € / $)
+          <button onClick={() => setActiveSection('currencies')} className={`px-4 py-3 lg:p-4 rounded-2xl text-left font-bold transition-all whitespace-nowrap shrink-0 text-sm lg:text-base ${activeSection === 'currencies' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/60'}`}>
+            💰 Currency & Rates
+          </button>
+          <button onClick={() => setActiveSection('security')} className={`px-4 py-3 lg:p-4 rounded-2xl text-left font-bold transition-all whitespace-nowrap shrink-0 text-sm lg:text-base ${activeSection === 'security' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/60'}`}>
+            🔒 Sécurité & Accès
           </button>
         </div>
 
@@ -384,6 +587,24 @@ export default function SettingsTab() {
                   value={settings.generalConditions ?? `1. Permis de conduire & Age minimum\nLe conducteur doit être âgé d'au moins 21 ans (selon la catégorie du véhicule) et être titulaire d'un permis de conduire valide depuis au moins 1 à 2 ans.\n\n2. Documents obligatoires à présenter\nLors de la remise des clés à l'agence, vous devez présenter votre permis de conduire original ainsi qu'une pièce d'identité ou un passeport en cours de validité.\n\n3. Caution & Garantie\nUne caution de garantie est consignée à l'agence lors du départ et vous est intégralement restituée au retour du véhicule sans dommage.\n\n4. Annulation gratuite\nL'annulation de la réservation est 100% gratuite à tout moment avant l'heure prévue de prise en charge sans aucun frais.`} 
                   onChange={(e) => setSettings({ ...settings, generalConditions: e.target.value })} 
                   placeholder="Type your general rental terms & conditions here..."
+                  className="w-full p-3.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-100 outline-none font-medium bg-white resize-y text-sm leading-relaxed mb-6" 
+                />
+
+                <label className="block text-sm font-extrabold text-slate-800 mb-2 mt-6 border-t border-slate-200 pt-6">✅ Conditions Requises par défaut (FR)</label>
+                <p className="text-xs text-slate-500 mb-3">Texte par défaut si le véhicule n'a pas de conditions spécifiques. (ex: Permis de conduire valide, etc.)</p>
+                <textarea 
+                  rows={3}
+                  value={settings.defaultRequirements?.fr ?? "Permis de conduire valide (min 1 à 2 ans)\nPièce d'identité ou Passeport valide"} 
+                  onChange={(e) => setSettings({ ...settings, defaultRequirements: { ...settings.defaultRequirements, fr: e.target.value } as any })} 
+                  className="w-full p-3.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-100 outline-none font-medium bg-white resize-y text-sm leading-relaxed mb-6" 
+                />
+
+                <label className="block text-sm font-extrabold text-slate-800 mb-2">⚠️ Conditions d'Utilisation par défaut (FR)</label>
+                <p className="text-xs text-slate-500 mb-3">Texte par défaut si le véhicule n'a pas de conditions d'utilisation spécifiques. (ex: Non fumeur, etc.)</p>
+                <textarea 
+                  rows={3}
+                  value={settings.defaultConditions?.fr ?? "Restitution avec le même niveau de carburant\nVéhicule non-fumeur"} 
+                  onChange={(e) => setSettings({ ...settings, defaultConditions: { ...settings.defaultConditions, fr: e.target.value } as any })} 
                   className="w-full p-3.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-100 outline-none font-medium bg-white resize-y text-sm leading-relaxed" 
                 />
               </div>
@@ -554,11 +775,7 @@ export default function SettingsTab() {
             <div>
               <h3 className="text-xl font-black mb-2">{t('aboutUsTab')}</h3>
               <p className="text-sm text-slate-500 font-medium mb-6">
-                {locale === 'fr' 
-                  ? 'Modifiez la photo de fond, les effets d\'animation et le contenu de la section "Notre Histoire".'
-                  : locale === 'ar'
-                  ? 'قم بتخصيص صورة الخلفية وتأثيرات الحركة والمحتوى لقسم "قصتنا".'
-                  : 'Customize the background picture, animation effects, and content for the "Notre Histoire" section on the About Us page.'}
+                Modifiez la photo de fond, les effets d'animation et le contenu de la section "Notre Histoire".
               </p>
 
               {/* Background & Animation Settings */}
@@ -1241,6 +1458,186 @@ export default function SettingsTab() {
               </div>
             </div>
           )}
+
+          {/* SECURITY SECTION */}
+          {activeSection === 'security' && (
+            <div>
+              <h3 className="text-xl font-black mb-2 flex items-center gap-2">
+                <Lock className="w-5 h-5 text-indigo-600" /> Sécurité & Compte Administrateur
+              </h3>
+              <p className="text-sm text-slate-500 font-medium mb-6">
+                Modifiez votre nom d'utilisateur et votre mot de passe d'accès au tableau de bord.
+              </p>
+
+              <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-indigo-600/20">
+                    <Shield className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-extrabold uppercase tracking-wider text-indigo-700 block">Compte Administrateur Actuel</span>
+                    <span className="text-lg font-black text-slate-900">{currentAuthUsername || 'admin'}</span>
+                  </div>
+                </div>
+                <div className="px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-indigo-100 text-indigo-800 border border-indigo-200/60">
+                  Accès par défaut : <code className="font-mono bg-white px-1.5 py-0.5 rounded text-indigo-900 font-bold">admin</code> / <code className="font-mono bg-white px-1.5 py-0.5 rounded text-indigo-900 font-bold">admin</code>
+                </div>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-4 mb-6 flex items-center justify-between text-xs font-bold text-amber-900">
+                <div className="flex items-center gap-2">
+                  <Key className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>En cas d'oubli du mot de passe sur la page de connexion, utilisez le code de récupération :</span>
+                </div>
+                <code className="font-mono bg-amber-100 border border-amber-300 px-2 py-1 rounded text-amber-950 font-black text-xs shrink-0 ml-2">
+                  admin-reset-2026
+                </code>
+              </div>
+
+              {/* 2FA & Email Verification Section */}
+              <div className="bg-slate-50 p-6 sm:p-8 rounded-2xl border border-slate-200/80 mb-6 space-y-6">
+                <div className="flex items-center justify-between border-b border-slate-200/80 pb-4">
+                  <div>
+                    <h4 className="font-extrabold text-slate-800 flex items-center gap-2 text-base">
+                      <Mail className="w-5 h-5 text-indigo-600" /> Adresse E-mail de Sécurité & Notifications
+                    </h4>
+                    <p className="text-xs text-slate-500 font-medium mt-1">
+                      Cette adresse reçoit les codes de sécurité 2FA et les alertes d'accès.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {emailVerified ? (
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Vérifié
+                      </span>
+                    ) : (
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1">
+                        <ShieldAlert className="w-3.5 h-3.5" /> Non vérifié
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <input
+                    type="email"
+                    value={adminEmail}
+                    onChange={(e) => setAdminEmail(e.target.value)}
+                    placeholder="admin@luxerent.com"
+                    className="flex-1 p-3.5 rounded-xl border border-slate-200 font-medium text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                  />
+                  {adminEmail !== originalAdminEmail ? (
+                    <button
+                      type="button"
+                      onClick={handleUpdateEmail}
+                      disabled={updatingEmail}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-3.5 rounded-xl text-xs shadow-md shadow-emerald-600/20 transition-all whitespace-nowrap disabled:bg-slate-300"
+                    >
+                      {updatingEmail ? 'Enregistrement...' : 'Sauvegarder l\'E-mail'}
+                    </button>
+                  ) : !emailVerified && (
+                    <button
+                      type="button"
+                      onClick={handleSendVerificationEmail}
+                      disabled={sendingEmailCode}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-3.5 rounded-xl text-xs shadow-md shadow-indigo-600/20 transition-all whitespace-nowrap disabled:bg-slate-300"
+                    >
+                      {sendingEmailCode ? 'Envoi...' : 'Vérifier l\'E-mail'}
+                    </button>
+                  )}
+                </div>
+
+                {/* 2FA Toggle */}
+                <div className="pt-4 border-t border-slate-200/80 flex items-center justify-between">
+                  <div className="pr-4">
+                    <label className="block text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-indigo-600" /> Authentification à Deux Facteurs (2FA)
+                    </label>
+                    <p className="text-xs text-slate-500 font-medium mt-1">
+                      Exige un code de sécurité à 6 chiffres envoyé par e-mail lors de chaque connexion d'un administrateur.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={twoFactorEnabled}
+                      disabled={toggling2FA}
+                      onChange={(e) => handleToggle2FA(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                  </label>
+                </div>
+              </div>
+
+              <form onSubmit={handleUpdateSecurity} className="space-y-6 bg-slate-50 p-6 sm:p-8 rounded-2xl border border-slate-200/80">
+                <div>
+                  <label className="block text-xs uppercase font-extrabold text-slate-700 mb-2">
+                    Nouveau Nom d'utilisateur
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={currentAuthUsername || 'admin'}
+                    value={securityForm.newUsername}
+                    onChange={(e) => setSecurityForm({ ...securityForm, newUsername: e.target.value })}
+                    className="w-full p-3.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none font-medium bg-white text-sm"
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1.5 font-medium">Laissez vide si vous souhaitez conserver le nom d'utilisateur actuel.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-xs uppercase font-extrabold text-slate-700 mb-2">
+                      Nouveau Mot de Passe
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      value={securityForm.newPassword}
+                      onChange={(e) => setSecurityForm({ ...securityForm, newPassword: e.target.value })}
+                      className="w-full p-3.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none font-medium bg-white text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs uppercase font-extrabold text-slate-700 mb-2">
+                      Confirmer le Nouveau Mot de Passe
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      value={securityForm.confirmPassword}
+                      onChange={(e) => setSecurityForm({ ...securityForm, confirmPassword: e.target.value })}
+                      className="w-full p-3.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none font-medium bg-white text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-5 border-t border-slate-200/80">
+                  <label className="block text-xs uppercase font-extrabold text-indigo-800 mb-2">
+                    Mot de Passe Actuel <span className="text-red-500">* (Obligatoire pour valider)</span>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Entrez votre mot de passe actuel..."
+                    value={securityForm.currentPassword}
+                    onChange={(e) => setSecurityForm({ ...securityForm, currentPassword: e.target.value })}
+                    className="w-full p-3.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none font-bold bg-white text-sm"
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1.5 font-medium">Saisissez votre mot de passe actuel pour des raisons de sécurité avant de valider.</p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={updatingSecurity}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 disabled:bg-slate-300"
+                >
+                  {updatingSecurity ? 'Mise à jour en cours...' : 'Enregistrer les Nouveaux Identifiants'}
+                </button>
+              </form>
+            </div>
+          )}
         </div>
       </div>
       {activeCropFile && (
@@ -1250,6 +1647,57 @@ export default function SettingsTab() {
           onCrop={performLogoUpload}
           aspectRatio="logo"
         />
+      )}
+
+      {/* Modal Verification E-mail */}
+      {showVerifyModal && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-200 shadow-2xl relative">
+            <button
+              onClick={() => setShowVerifyModal(false)}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Mail className="w-7 h-7" />
+            </div>
+
+            <h3 className="text-xl font-black text-center text-slate-900 mb-1">
+              Vérification de l'E-mail
+            </h3>
+            <p className="text-xs font-medium text-slate-500 text-center mb-6">
+              Un code de vérification à 6 chiffres a été envoyé à <strong>{adminEmail}</strong>.
+            </p>
+
+            {devVerificationCode && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-900 p-3 rounded-xl text-center text-xs font-bold mb-4">
+                Code de test Dev : <code className="font-mono bg-amber-100 px-2 py-0.5 rounded font-black">{devVerificationCode}</code>
+              </div>
+            )}
+
+            <form onSubmit={handleVerifyEmailCode} className="space-y-4">
+              <input
+                type="text"
+                maxLength={6}
+                required
+                placeholder="123456"
+                value={emailCodeInput}
+                onChange={(e) => setEmailCodeInput(e.target.value.replace(/\D/g, ''))}
+                className="w-full p-4 rounded-xl border border-slate-200 font-mono font-black text-2xl tracking-[0.4em] text-center outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+
+              <button
+                type="submit"
+                disabled={verifyingEmailCode}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-600/20 text-sm transition-all disabled:bg-slate-300"
+              >
+                {verifyingEmailCode ? 'Vérification...' : 'Confirmer le Code'}
+              </button>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

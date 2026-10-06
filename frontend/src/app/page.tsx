@@ -366,9 +366,9 @@ export default function Home() {
           {/* Animated stats ticker */}
           <div className="animate-fade-in-up delay-600 flex flex-wrap items-center justify-center gap-8 md:gap-12">
             {[
-              { value: '13+', label: t('vehiclesStat', 'Vehicles') },
+              { value: loadingVehicles ? '...' : `${featuredVehicles.length}+`, label: t('vehiclesStat', 'Vehicles') },
               { value: '5★', label: t('satisfactionStat', 'Client rating') },
-              { value: '3', label: t('categoriesStat', 'Categories') },
+              { value: !categoriesLoaded ? '...' : `${categories.length}`, label: t('categoriesStat', 'Categories') },
               { value: '24/7', label: t('supportStat', 'Support') },
             ].map((stat, i) => (
               <div key={i} className="animate-count-up text-center" style={{ animationDelay: `${700 + i * 120}ms` }}>
@@ -382,158 +382,180 @@ export default function Home() {
 
       {/* Floating Search Widget Modal */}
       {isSearchModalOpen && siteSettings?.showSearchWidget !== false && siteSettings?.showDateSearch !== false && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsSearchModalOpen(false)} />
-          <div className="relative w-full max-w-5xl animate-in zoom-in-95 duration-200">
-            <button 
-              onClick={() => setIsSearchModalOpen(false)}
-              className="absolute -top-12 right-0 md:-right-12 text-white/70 hover:text-white transition-colors"
-            >
-              <X className="w-8 h-8" />
-            </button>
-            <div className="bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(15,23,42,0.15)] border border-slate-100/85">
-            <div className="flex border-b border-slate-200 overflow-x-auto rounded-t-[2rem] overflow-hidden">
-              {categories.length > 0 ? categories.map((tab) => {
-                const Icon = tab.name.toLowerCase() === 'motorcycle' ? Bike : tab.name.toLowerCase() === 'jetski' ? Ship : Car;
-                return (
-                  <button
-                    key={tab._id}
-                    type="button"
-                    onClick={() => handleCategorySelect(tab.name)}
-                    className={`flex-1 py-5 px-4 flex flex-col md:flex-row items-center justify-center gap-2.5 font-bold transition-all duration-300 min-w-[120px] ${activeTab === tab.name ? 'text-white shadow-inner scale-100' : 'bg-slate-50/50 text-slate-500 hover:bg-slate-100/50 hover:text-slate-900'}`}
-                    style={activeTab === tab.name ? { backgroundColor: 'var(--brand-secondary)' } : {}}
-                  >
-                    <Icon className="w-5 h-5 shrink-0" />
-                    <span className="text-sm tracking-wide uppercase">{tab.name}</span>
-                  </button>
-                );
-              }) : categoriesLoaded ? (
-                <div className="py-5 text-center w-full text-slate-400 font-bold">No categories available</div>
-              ) : (
-                <div className="py-5 text-center w-full text-slate-400 font-bold">Loading categories...</div>
-              )}
-            </div>
-
-            <form onSubmit={handleSearch} className="p-6 md:p-8 flex flex-col gap-6 bg-white relative">
-              {errorMsg && (
-                <div className="w-full bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm font-bold border border-red-100/50">
-                  {errorMsg}
-                </div>
-              )}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+          <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-md transition-opacity" onClick={() => setIsSearchModalOpen(false)} />
+          
+          <div className="relative w-full max-w-5xl my-auto animate-in zoom-in-95 duration-200">
+            
+            {/* Modal Card Container */}
+            <div className="bg-white rounded-3xl sm:rounded-[2.5rem] shadow-[0_25px_60px_rgba(15,23,42,0.3)] border border-slate-100 relative">
               
-              <div className="flex flex-col lg:flex-row gap-6 items-start w-full">
-                
-                {/* Dynamic Location Picker */}
-                <div className="flex-1 w-full" ref={locationRef}>
-                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
-                    <MapPin className="w-4 h-4 text-blue-600 shrink-0" /> {t('pickupLocation')}
-                  </label>
-                  
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setShowLocationGrid(!showLocationGrid)}
-                      className="w-full h-14 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 flex items-center justify-between focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all duration-200"
-                    >
-                      <span className={`flex-1 text-left truncate mr-2 ${location ? "text-slate-900" : "text-slate-400"}`}>
-                        {location || t('selectLocation')}
-                      </span>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`text-slate-400 transition-transform ${showLocationGrid ? 'rotate-180' : ''}`}>
-                        <path d="m6 9 6 6 6-6"/>
-                      </svg>
-                    </button>
+              {/* Close Button inside Card Top Right */}
+              <button 
+                onClick={() => setIsSearchModalOpen(false)}
+                className="absolute top-4 right-4 sm:top-5 sm:right-5 z-30 p-2 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-900 rounded-full transition-all duration-200 cursor-pointer shadow-sm active:scale-95"
+                title="Fermer"
+              >
+                <X className="w-5 h-5" />
+              </button>
 
-                    {/* Popout Visual Location Grid */}
-                    {showLocationGrid && (
-                      <div className="absolute top-full left-0 right-0 mt-3 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 p-4 max-h-[300px] overflow-y-auto animate-in fade-in slide-in-from-top-4">
-                        {getLocationsForCategory().length === 0 ? (
-                          <div className="text-center p-4 text-slate-500 text-sm font-bold">No locations configured for {activeTab}.</div>
-                        ) : (
-                          <div className="grid grid-cols-1 gap-2">
-                            {getLocationsForCategory().map((loc: any) => (
+              {/* Header Segmented Category Tabs */}
+              <div className="p-4 sm:p-6 sm:pb-2 pr-14 sm:pr-16">
+                <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200/60 overflow-x-auto no-scrollbar">
+                  {categories.map((tab) => {
+                    const Icon = tab.name.toLowerCase() === 'motorcycle' ? Bike : tab.name.toLowerCase() === 'jetski' ? Ship : Car;
+                    const isActive = activeTab === tab.name;
+                    return (
+                      <button
+                        key={tab._id}
+                        type="button"
+                        onClick={() => handleCategorySelect(tab.name)}
+                        className={`flex-1 py-3 sm:py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 font-black text-xs sm:text-sm tracking-wider uppercase transition-all duration-200 shrink-0 cursor-pointer ${
+                          isActive
+                            ? 'bg-slate-900 text-white shadow-lg shadow-slate-950/20 scale-[1.01]'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                        }`}
+                        style={isActive ? { backgroundColor: 'var(--brand-secondary, #0f172a)' } : {}}
+                      >
+                        <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" />
+                        <span>{tab.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Search Form Body */}
+              <form onSubmit={handleSearch} className="p-4 sm:p-6 md:p-8 space-y-5 bg-white">
+                {errorMsg && (
+                  <div className="w-full bg-red-50 text-red-600 px-4 py-3 rounded-xl text-xs sm:text-sm font-bold border border-red-100/50">
+                    {errorMsg}
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-end w-full">
+                  
+                  {/* 1. Location Picker (4 cols) */}
+                  <div className="lg:col-span-4 w-full relative" ref={locationRef}>
+                    <label className="block text-[11px] sm:text-xs font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                      <MapPin className="w-4 h-4 text-blue-600 shrink-0" /> {t('pickupLocation')}
+                    </label>
+                    
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => setShowLocationGrid(!showLocationGrid)}
+                        className="w-full h-12 sm:h-14 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-white px-4 text-xs sm:text-sm font-bold text-slate-800 flex items-center justify-between focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all cursor-pointer shadow-xs"
+                      >
+                        <span className={`flex-1 text-left truncate mr-2 ${location ? "text-slate-900 font-bold" : "text-slate-400 font-semibold"}`}>
+                          {location || t('selectLocation')}
+                        </span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`text-slate-400 transition-transform duration-200 ${showLocationGrid ? 'rotate-180 text-blue-600' : ''}`}>
+                          <path d="m6 9 6 6 6-6"/>
+                        </svg>
+                      </button>
+
+                      {/* Visual Inline Location Grid */}
+                      {showLocationGrid && (
+                        <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white border border-slate-200/90 rounded-2xl shadow-[0_20px_50px_rgba(15,23,42,0.22)] z-[80] p-2.5 max-h-[250px] overflow-y-auto space-y-1.5 animate-in fade-in slide-in-from-top-2 ring-1 ring-black/5">
+                          {getLocationsForCategory().length === 0 ? (
+                            <div className="text-center p-3 text-slate-500 text-xs font-bold">No locations configured for {activeTab}.</div>
+                          ) : (
+                            getLocationsForCategory().map((loc: any) => (
                               <div 
                                 key={loc.name}
                                 onClick={() => handleLocationSelect(loc.name)}
-                                className={`p-3 rounded-xl border cursor-pointer flex items-start gap-3 transition-all ${location === loc.name ? 'border-blue-600 bg-blue-50 shadow-sm' : 'border-slate-100 hover:border-blue-300 hover:bg-slate-50'}`}
+                                className={`p-2.5 rounded-xl border cursor-pointer flex items-center gap-3 transition-all ${
+                                  location === loc.name 
+                                    ? 'border-blue-600 bg-blue-600 text-white shadow-sm' 
+                                    : 'border-slate-200/70 bg-white hover:border-blue-400 hover:bg-blue-50/60 text-slate-800'
+                                }`}
                               >
-                                <div className={`p-2 rounded-lg ${location === loc.name ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                                  {loc.type === 'Airport' && <Plane className="w-5 h-5" />}
-                                  {loc.type === 'City' && <Building2 className="w-5 h-5" />}
-                                  {loc.type === 'Marina' && <Waves className="w-5 h-5" />}
+                                <div className={`p-2 rounded-lg shrink-0 ${location === loc.name ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                                  {loc.type === 'Airport' && <Plane className="w-4 h-4" />}
+                                  {loc.type === 'City' && <Building2 className="w-4 h-4" />}
+                                  {loc.type === 'Marina' && <Waves className="w-4 h-4" />}
                                 </div>
-                                <div className="flex-1">
-                                  <div className={`text-sm font-black leading-tight ${location === loc.name ? 'text-blue-900' : 'text-slate-800'}`}>{loc.name}</div>
-                                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-1">{loc.type}</div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs sm:text-sm font-black leading-tight truncate">{loc.name}</div>
+                                  <div className={`text-[10px] font-extrabold uppercase tracking-wider mt-0.5 ${location === loc.name ? 'text-blue-100' : 'text-slate-400'}`}>{loc.type}</div>
                                 </div>
                               </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Chronological Calendar Constraints */}
-                <div className="flex-[1.5] w-full">
-                  <div className="flex items-center justify-between mb-2.5">
-                    <label className="text-xs font-extrabold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                      <Calendar className="w-4 h-4 text-blue-600" /> {t('rentalDates')}
-                    </label>
-                    {/* Smart Shortcuts */}
-                    <div className="flex items-center gap-2">
-                      <button type="button" onClick={() => applyQuickDate('weekend')} className="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-md transition-colors">
-                        {t('weekendPreset')}
-                      </button>
-                      <button type="button" onClick={() => applyQuickDate('nextWeek')} className="text-[10px] uppercase font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-md transition-colors">
-                        {t('nextWeekPreset') || 'Next Week'}
-                      </button>
+                            ))
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="flex gap-2.5">
-                    <Input 
-                      type="datetime-local" 
-                      required 
-                      ref={pickupInputRef}
-                      value={pickupDate}
-                      min={todayStr}
-                      max={maxDateStr}
-                      onChange={(e) => setPickupDate(e.target.value)}
-                      className="w-full h-14 rounded-xl text-sm md:text-md border-slate-200 focus:ring-4 focus:ring-blue-50" 
-                    />
-                    <Input 
-                      type="datetime-local" 
-                      required 
-                      value={returnDate}
-                      min={pickupDate || todayStr} // Chronological Locking: return >= pickup
-                      max={maxDateStr}
-                      onChange={(e) => setReturnDate(e.target.value)}
-                      className="w-full h-14 rounded-xl text-sm md:text-md border-slate-200 focus:ring-4 focus:ring-blue-50" 
-                    />
+                  
+                  {/* 2. Rental Dates (5 cols) */}
+                  <div className="lg:col-span-5 w-full">
+                    <div className="flex flex-wrap items-center justify-between gap-1.5 mb-2">
+                      <label className="text-[11px] sm:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                        <Calendar className="w-4 h-4 text-blue-600" /> {t('rentalDates')}
+                      </label>
+                      {/* Smart Shortcuts */}
+                      <div className="flex items-center gap-1.5">
+                        <button type="button" onClick={() => applyQuickDate('weekend')} className="text-[10px] uppercase font-extrabold text-blue-600 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer">
+                          {t('weekendPreset')}
+                        </button>
+                        <button type="button" onClick={() => applyQuickDate('nextWeek')} className="text-[10px] uppercase font-extrabold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer">
+                          {t('nextWeekPreset') || 'Next Week'}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <Input 
+                        type="datetime-local" 
+                        required 
+                        ref={pickupInputRef}
+                        value={pickupDate}
+                        min={todayStr}
+                        max={maxDateStr}
+                        onChange={(e) => setPickupDate(e.target.value)}
+                        className="w-full h-12 sm:h-14 rounded-2xl text-xs sm:text-sm border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-blue-50 font-semibold text-slate-800" 
+                      />
+                      <Input 
+                        type="datetime-local" 
+                        required 
+                        value={returnDate}
+                        min={pickupDate || todayStr}
+                        max={maxDateStr}
+                        onChange={(e) => setReturnDate(e.target.value)}
+                        className="w-full h-12 sm:h-14 rounded-2xl text-xs sm:text-sm border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-blue-50 font-semibold text-slate-800" 
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex items-end h-full mt-7 lg:mt-0">
-                  <Button type="submit" size="lg" className="w-full lg:w-auto h-14 rounded-xl font-bold bg-slate-900 hover:bg-blue-600 px-10 text-white shadow-xl shadow-slate-950/10 hover:shadow-blue-600/20 transition-all duration-300">
-                    {t('searchFleet')} <ArrowRight className="w-5 h-5 ms-2" />
-                  </Button>
+                  {/* 3. Search Button (3 cols) */}
+                  <div className="lg:col-span-3 w-full">
+                    <Button 
+                      type="submit" 
+                      size="lg" 
+                      className="w-full h-12 sm:h-14 rounded-2xl font-black bg-slate-900 hover:bg-blue-600 px-6 text-white shadow-xl shadow-slate-950/15 hover:shadow-blue-600/30 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer text-xs sm:text-sm uppercase tracking-wider"
+                      style={{ backgroundColor: 'var(--brand-secondary, #0f172a)' }}
+                    >
+                      <span>{t('searchFleet')}</span>
+                      <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                    </Button>
+                  </div>
+
                 </div>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
-        </div>
         </div>
       )}
 
       {/* ── Fleet Highlights ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 pt-24">
         {/* The rest of the page remains identical... */}
-        <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-12">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider mb-4 border" style={{ backgroundColor: 'color-mix(in srgb, var(--brand-secondary) 10%, white)', color: 'var(--brand-secondary)', borderColor: 'color-mix(in srgb, var(--brand-secondary) 20%, white)' }}>
+        <div className="flex flex-col md:flex-row justify-between items-center md:items-end gap-6 mb-8 md:mb-12">
+          <div className="flex flex-col items-center md:items-start text-center md:text-left w-full md:w-auto">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider mb-3 border shadow-xs" style={{ backgroundColor: 'color-mix(in srgb, var(--brand-secondary) 10%, white)', color: 'var(--brand-secondary)', borderColor: 'color-mix(in srgb, var(--brand-secondary) 20%, white)' }}>
               <Star className="w-3.5 h-3.5 fill-blue-700" /> Sélection Premium
             </div>
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight text-center md:text-left">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
               {t('featuredVehicles')}
             </h2>
           </div>
@@ -543,72 +565,72 @@ export default function Home() {
         </div>
 
         {loadingVehicles ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
             {[1,2,3,4].map(i => (
               <div key={i} className="animate-pulse bg-white rounded-3xl h-[400px] border border-slate-100"></div>
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {featuredVehicles.slice(0, 4).map((vehicle: any) => (
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
+            {featuredVehicles.slice(0, 6).map((vehicle: any) => (
               <div 
                 key={vehicle._id} 
                 onClick={() => router.push(`/fleet/${vehicle._id}`)}
-                className="group bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 flex flex-col cursor-pointer"
+                className="group bg-white rounded-2xl sm:rounded-[2rem] overflow-hidden border border-slate-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 flex flex-col cursor-pointer w-full"
               >
-                <div className="relative aspect-[4/3] overflow-hidden bg-slate-100 p-2 flex items-center justify-center">
+                <div className="relative aspect-[16/10] sm:aspect-[4/3] max-h-36 sm:max-h-64 overflow-hidden bg-slate-100/80 p-2 sm:p-4 flex items-center justify-center">
                   <img 
                     src={vehicle.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'} 
                     alt={vehicle.model}
                     className="w-full h-full object-contain filter drop-shadow-2xl group-hover:scale-110 group-hover:-translate-y-2 transition-transform duration-700 z-0"
                   />
                   {vehicle.discount?.percentage > 0 && (
-                    <div className="absolute top-4 left-4 z-20">
-                      <span className="px-2.5 py-1 bg-red-500 text-white text-[9px] font-black uppercase tracking-wider rounded-lg shadow-sm">
+                    <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-20">
+                      <span className="px-1.5 py-0.5 sm:px-2.5 sm:py-1 bg-red-500 text-white text-[8px] sm:text-[9px] font-black uppercase tracking-wider rounded-md sm:rounded-lg shadow-sm">
                         -{vehicle.discount.percentage}% {vehicle.discount.label}
                       </span>
                     </div>
                   )}
-                  <div className="absolute top-4 right-4 z-20">
-                    <span className="px-3 py-1.5 bg-white/90 backdrop-blur-sm text-slate-900 text-[10px] font-black uppercase tracking-wider rounded-lg shadow-sm">
+                  <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-20">
+                    <span className="px-2 py-0.5 sm:px-3 sm:py-1.5 bg-white/90 backdrop-blur-sm text-slate-900 text-[8px] sm:text-[10px] font-black uppercase tracking-wider rounded-md sm:rounded-lg shadow-sm">
                       {vehicle.category}
                     </span>
                   </div>
                 </div>
-                <div className="p-6 flex-1 flex flex-col">
-                  <div className="text-xs font-black mb-1.5 uppercase tracking-wider" style={{ color: 'var(--brand-secondary)' }}>{vehicle.make}</div>
-                  <h3 className="text-xl font-black text-slate-900 mb-4 tracking-tight leading-tight">{vehicle.model} <span className="text-slate-400 font-medium">{vehicle.year}</span></h3>
+                <div className="p-3 sm:p-6 flex-1 flex flex-col">
+                  <div className="text-[10px] sm:text-xs font-black mb-1 sm:mb-1.5 uppercase tracking-wider" style={{ color: 'var(--brand-secondary)' }}>{vehicle.make}</div>
+                  <h3 className="text-sm sm:text-2xl font-black text-slate-900 mb-2 sm:mb-4 tracking-tight leading-tight line-clamp-1">{vehicle.model} <span className="text-slate-400 font-medium">{vehicle.year}</span></h3>
                   
-                  <div className="grid grid-cols-2 gap-3 mb-6">
-                    <div className="bg-slate-50 rounded-xl p-2.5 flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-md bg-white shadow-sm flex items-center justify-center text-slate-400"><Car className="w-3.5 h-3.5" /></div>
-                      <span className="text-xs font-bold text-slate-600">{vehicle.features?.transmission || 'Auto'}</span>
+                  <div className="grid grid-cols-2 gap-1.5 sm:gap-3 mb-3 sm:mb-6">
+                    <div className="bg-slate-50 rounded-lg sm:rounded-xl p-1.5 sm:p-2.5 flex items-center gap-1.5 sm:gap-2 overflow-hidden">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-white shadow-xs flex items-center justify-center text-slate-400 shrink-0"><Car className="w-3 h-3 sm:w-3.5 sm:h-3.5" /></div>
+                      <span className="text-[10px] sm:text-xs font-bold text-slate-600 truncate">{vehicle.features?.transmission || 'Auto'}</span>
                     </div>
-                    <div className="bg-slate-50 rounded-xl p-2.5 flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-md bg-white shadow-sm flex items-center justify-center text-slate-400"><SettingsIcon className="w-3.5 h-3.5" /></div>
-                      <span className="text-xs font-bold text-slate-600">{vehicle.features?.horsepower || '150'} HP</span>
+                    <div className="bg-slate-50 rounded-lg sm:rounded-xl p-1.5 sm:p-2.5 flex items-center gap-1.5 sm:gap-2 overflow-hidden">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-white shadow-xs flex items-center justify-center text-slate-400 shrink-0"><SettingsIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" /></div>
+                      <span className="text-[10px] sm:text-xs font-bold text-slate-600 truncate">{vehicle.features?.horsepower || '150'} HP</span>
                     </div>
                   </div>
 
-                  <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-5">
+                  <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-3 sm:pt-5">
                     <div>
-                      <span className="text-xs font-extrabold text-slate-400 uppercase tracking-widest block mb-0.5">{t('from')}</span>
+                      <span className="text-[9px] sm:text-xs font-extrabold text-slate-400 uppercase tracking-widest block mb-0.5">{t('from')}</span>
                       {vehicle.discount?.percentage > 0 ? (
                         <div>
-                          <span className="text-xs text-slate-400 line-through font-bold block leading-none mb-1">
+                          <span className="text-[9px] sm:text-xs text-slate-400 line-through font-bold block leading-none mb-0.5">
                             {formatPrice(vehicle.pricePerDay || vehicle.pricePerHour)}
                           </span>
-                          <span className="text-xl font-black text-red-650">
+                          <span className="text-sm sm:text-2xl font-black text-red-650">
                             {formatPrice((vehicle.pricePerDay || vehicle.pricePerHour) * (1 - vehicle.discount.percentage / 100))}
-                            <span className="text-xs font-bold text-slate-400">
+                            <span className="text-[9px] sm:text-xs font-bold text-slate-400">
                               {' '}/ {vehicle.pricePerDay ? t('day') : t('hour')}
                             </span>
                           </span>
                         </div>
                       ) : (
-                        <div className="text-2xl font-black text-slate-900">
+                        <div className="text-sm sm:text-2xl font-black text-slate-900">
                           {formatPrice(vehicle.pricePerDay || vehicle.pricePerHour)}
-                          <span className="text-sm font-bold text-slate-400">
+                          <span className="text-[9px] sm:text-sm font-bold text-slate-400">
                             {' '}/ {vehicle.pricePerDay ? t('day') : t('hour')}
                           </span>
                         </div>
@@ -616,11 +638,11 @@ export default function Home() {
                     </div>
                     <button 
                       onClick={(e) => { e.stopPropagation(); router.push(`/fleet/${vehicle._id}`); }}
-                      className="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center transition-colors shadow-md shadow-slate-900/10 hover:shadow-lg"
+                      className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-slate-900 text-white flex items-center justify-center transition-colors shadow-md shadow-slate-900/10 hover:shadow-lg shrink-0"
                       onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--brand-secondary)')}
                       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '')}
                     >
-                      <ArrowRight className="w-5 h-5 group-hover:-rotate-45 transition-transform duration-300" />
+                      <ArrowRight className="w-3.5 h-3.5 sm:w-5 sm:h-5 group-hover:-rotate-45 transition-transform duration-300" />
                     </button>
                   </div>
                 </div>

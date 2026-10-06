@@ -34,7 +34,7 @@ export default async function RootLayout({
   const settings = await getSettings();
 
   return (
-    <html lang="en" className={cn("font-sans", geist.variable)} suppressHydrationWarning>
+    <html lang="fr" className={cn("font-sans", geist.variable)} suppressHydrationWarning>
       <body className="bg-slate-50 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-blue-200" suppressHydrationWarning>
         <Providers initialSettings={settings}>
           <LayoutShell>

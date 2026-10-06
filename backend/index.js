@@ -1,4 +1,4 @@
-import express from 'express';
+import express from 'express'; // Server entrypoint updated
 import mongoose from 'mongoose';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -11,11 +11,12 @@ import bookingRoutes from './routes/bookings.js';
 import seedRoutes from './routes/seed.js';
 import uploadRoutes from './routes/upload.js';
 import adminRoutes from './routes/admin.js';
-import authRoutes from './routes/auth.js';
+import authRoutes, { seedDefaultAdmin } from './routes/auth.js';
 import categoryRoutes from './routes/categories.js';
 import messageRoutes from './routes/messages.js';
 import settingsRoutes from './routes/settings.js';
 import extraOptionsRoutes from './routes/extraOptions.js';
+import chatRoutes from './routes/chat.js';
 
 dotenv.config();
 
@@ -51,6 +52,7 @@ app.use(
 // All other origins (including Postman with a browser Origin header) are rejected.
 const ALLOWED_ORIGINS = [
   process.env.FRONTEND_URL || 'http://localhost:3000',
+  'http://127.0.0.1:3000',
 ];
 
 app.use(
@@ -135,6 +137,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/extra-options', extraOptionsRoutes);
+app.use('/api/chat', chatRoutes);
 
 // ── 7. Global Error Handler ──────────────────────────────────────────────────
 // Catches CORS errors and any unhandled route/middleware errors.
@@ -145,8 +148,8 @@ app.use((err, req, res, _next) => {
   if (isCorsError) {
     return res.status(403).json({ error: err.message });
   }
-  console.error(`[${new Date().toISOString()}] ${req.method} ${req.path} → ${status}: ${err.message}`);
-  res.status(status).json({ error: 'Internal server error.' });
+  console.error(`[${new Date().toISOString()}] ${req.method} ${req.path} → ${status}:`, err);
+  res.status(status).json({ error: err.message || 'Internal server error.' });
 });
 
 // ── 8. MongoDB Connection with Retry ────────────────────────────────────────
@@ -170,6 +173,7 @@ async function connectWithRetry(attempt = 1, maxAttempts = 20) {
   try {
     await mongoose.connect(MONGODB_URI, MONGOOSE_OPTS);
     console.log('Connected to MongoDB');
+    await seedDefaultAdmin();
   } catch (error) {
     const delay = Math.min(1000 * 2 ** attempt, 30000);
     console.error(

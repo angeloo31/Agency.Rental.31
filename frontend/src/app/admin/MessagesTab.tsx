@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Check, Trash2, X, AlertCircle } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
 import { useConfirm } from '@/context/ConfirmContext';
 
 interface Message {
@@ -13,21 +14,34 @@ interface Message {
   createdAt: string;
 }
 
-export default function MessagesTab() {
-  const { t, locale } = useLanguage();
+interface MessagesTabProps {
+  onUnreadCountChange?: (count: number) => void;
+}
+
+export default function MessagesTab({ onUnreadCountChange }: MessagesTabProps) {
+  const { t } = useLanguage();
+  const { token } = useAuth();
   const { confirm } = useConfirm();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const updateUnreadCount = (list: Message[]) => {
+    const count = list.filter(m => m.status === 'Unread').length;
+    onUnreadCountChange?.(count);
+  };
 
   const fetchMessages = async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/messages', {
-        headers: { }
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
       });
       if (res.ok) {
-        const data = await res.json();
+        const data: Message[] = await res.json();
         setMessages(data);
+        updateUnreadCount(data);
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -46,13 +60,18 @@ export default function MessagesTab() {
       const res = await fetch(`/api/messages/${id}/read`, {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify({ status: newStatus })
       });
       if (res.ok) {
         const updated = await res.json();
-        setMessages(prev => prev.map(m => m._id === id ? updated : m));
+        setMessages(prev => {
+          const next = prev.map(m => m._id === id ? updated : m);
+          updateUnreadCount(next);
+          return next;
+        });
       }
     } catch (error) {
       console.error('Error updating status:', error);
@@ -65,10 +84,16 @@ export default function MessagesTab() {
     try {
       const res = await fetch(`/api/messages/${id}`, {
         method: 'DELETE',
-        headers: { }
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
       });
       if (res.ok) {
-        setMessages(prev => prev.filter(m => m._id !== id));
+        setMessages(prev => {
+          const next = prev.filter(m => m._id !== id);
+          updateUnreadCount(next);
+          return next;
+        });
       }
     } catch (error) {
       console.error('Error deleting message:', error);
@@ -137,7 +162,7 @@ export default function MessagesTab() {
                   <div className="flex flex-wrap items-center gap-6 text-sm font-semibold text-slate-500">
                     <div><span className="uppercase text-[10px] font-extrabold text-slate-400 block mb-0.5 tracking-wider">{t('from')}</span> <span className="text-slate-800">{msg.name}</span></div>
                     <div><span className="uppercase text-[10px] font-extrabold text-slate-400 block mb-0.5 tracking-wider">{t('emailAddress')}</span> <a href={`mailto:${msg.email}`} className="text-indigo-600 hover:text-indigo-700 hover:underline transition-colors">{msg.email}</a></div>
-                    <div><span className="uppercase text-[10px] font-extrabold text-slate-400 block mb-0.5 tracking-wider">{t('date')}</span> {new Date(msg.createdAt).toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-US')}</div>
+                    <div><span className="uppercase text-[10px] font-extrabold text-slate-400 block mb-0.5 tracking-wider">{t('date')}</span> {new Date(msg.createdAt).toLocaleString('fr-FR')}</div>
                   </div>
                 </div>
 
