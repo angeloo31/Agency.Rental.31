@@ -4,18 +4,20 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-type Role = 'Admin' | 'Agent' | null;
+type Role = 'Admin' | 'Seller' | 'Agent' | 'Customer' | null;
 
 interface AuthState {
   username: string | null;
   role: Role;
+  permissions: string[];
   token: string | null;
   isAuthenticated: boolean;
 }
 
 interface AuthContextType extends AuthState {
-  login: (username: string, role: Role, token: string) => void;
+  login: (username: string, role: Role, token: string, permissions?: string[]) => void;
   logout: () => void;
+  hasPermission: (permission: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authState, setAuthState] = useState<AuthState>({
     username: null,
     role: null,
+    permissions: [],
     token: null,
     isAuthenticated: false,
   });
@@ -38,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setAuthState({
             username: data.username,
             role: data.role,
+            permissions: Array.isArray(data.permissions) ? data.permissions : [],
             token: null, // token is now stored securely in cookie
             isAuthenticated: true,
           });
@@ -49,20 +53,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
-  const login = (username: string, role: Role, token: string) => {
+  const login = (username: string, role: Role, token: string, permissions?: string[]) => {
     // The backend already set the httpOnly cookie
-    setAuthState({ username, role, token: null, isAuthenticated: true });
+    setAuthState({
+      username,
+      role,
+      permissions: permissions || [],
+      token: null,
+      isAuthenticated: true
+    });
   };
 
   const logout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch(e) {}
-    setAuthState({ username: null, role: null, token: null, isAuthenticated: false });
+    setAuthState({ username: null, role: null, permissions: [], token: null, isAuthenticated: false });
+  };
+
+  const hasPermission = (permission: string): boolean => {
+    if (authState.role === 'Admin') return true;
+    return authState.permissions.includes(permission);
   };
 
   return (
-    <AuthContext.Provider value={{ ...authState, login, logout }}>
+    <AuthContext.Provider value={{ ...authState, login, logout, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );

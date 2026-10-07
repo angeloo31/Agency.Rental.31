@@ -21,15 +21,16 @@ if (!MONGODB_URI) {
   process.exit(1);
 }
 
-// Find JSON file path (either argument or default import_data.json at project root)
+// Find JSON file path (either argument, backend/data/import_data.json, or root import_data.json)
 const customFile = process.argv[2];
-const jsonFilePath = customFile 
-  ? path.resolve(customFile)
-  : path.join(__dirname, '../../import_data.json');
+let jsonFilePath = customFile ? path.resolve(customFile) : path.join(__dirname, '../data/import_data.json');
+if (!fs.existsSync(jsonFilePath)) {
+  jsonFilePath = path.join(__dirname, '../../import_data.json');
+}
 
 if (!fs.existsSync(jsonFilePath)) {
   console.error(`ERROR: JSON file not found at path: ${jsonFilePath}`);
-  console.log('Please edit import_data.json at the root of the project.');
+  console.log('Please place import_data.json in backend/data/ or project root.');
   process.exit(1);
 }
 

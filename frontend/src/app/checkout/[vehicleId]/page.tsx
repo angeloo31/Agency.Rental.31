@@ -632,10 +632,10 @@ function CheckoutContent() {
                       </div>
                       <div>
                         <h4 className="font-black text-emerald-900 text-sm mb-1">
-                          {t('payOnPickupNotice') || 'Pay On Pickup — No charges now'}
+                          {t('payOnPickupNotice') || 'Paiement sur place — Aucun frais maintenant'}
                         </h4>
                         <p className="text-xs font-medium text-emerald-700 leading-relaxed">
-                          {t('payOnPickupDesc') || 'Your reservation is free. You pay in cash at the agency when picking up the vehicle.'}
+                          {t('payOnPickupDesc') || 'Votre réservation est gratuite sans prépaiement en ligne. Vous payez en espèces ou par carte lors de la récupération du véhicule à l\'agence.'}
                         </p>
                       </div>
                     </div>

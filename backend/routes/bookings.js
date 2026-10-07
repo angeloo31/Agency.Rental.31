@@ -5,7 +5,8 @@ import { differenceInHours } from 'date-fns';
 import Booking from '../models/Booking.js';
 import Vehicle from '../models/Vehicle.js';
 import ExtraOption from '../models/ExtraOption.js';
-import { requireAuth, requireAdmin } from '../middleware/auth.js';
+import { requireAuth, requireAdmin, requirePermission } from '../middleware/auth.js';
+import { logAction } from '../utils/auditLogger.js';
 
 const router = express.Router();
 
@@ -197,6 +198,13 @@ router.post(
       bookingStatus:  'Pending',
     });
 
+    await logAction({
+      req,
+      action: 'CREATE_BOOKING',
+      resource: 'Booking',
+      details: `Réservation créée pour ${booking.guestName} (${vehicle.title || vehicle.make || 'Véhicule'}) - Total: ${totalPrice} DA`
+    });
+
     res.status(201).json(booking);
   } catch (error) {
     console.error('[Bookings] POST error:', error.message);
@@ -205,7 +213,7 @@ router.post(
 });
 
 // ── GET /api/bookings ────────────────────────────────────────────────────────
-router.get('/', requireAuth, requireAdmin, async (req, res) => {
+router.get('/', requireAuth, requirePermission('manage_bookings'), async (req, res) => {
   try {
     const bookings = await Booking.find().populate('vehicleId').sort({ createdAt: -1 });
     res.json(bookings);
@@ -217,7 +225,7 @@ router.get('/', requireAuth, requireAdmin, async (req, res) => {
 
 // ── PATCH /api/bookings/:id/status ───────────────────────────────────────────
 // Only allows transitions to valid enum values. Does not accept arbitrary fields.
-router.patch('/:id/status', requireAuth, requireAdmin, async (req, res) => {
+router.patch('/:id/status', requireAuth, requirePermission('manage_bookings'), async (req, res) => {
   try {
     const { status } = req.body;
     const VALID_STATUSES = ['Pending', 'Confirmed', 'Completed', 'Cancelled'];
@@ -240,6 +248,13 @@ router.patch('/:id/status', requireAuth, requireAdmin, async (req, res) => {
       return res.status(404).json({ error: 'Booking not found.' });
     }
 
+    await logAction({
+      req,
+      action: 'UPDATE_BOOKING_STATUS',
+      resource: 'Booking',
+      details: `Réservation #${booking._id} (${booking.guestName}) modifiée → Statut: ${status}`
+    });
+
     res.json(booking);
   } catch (error) {
     console.error('[Bookings] PATCH error:', error.message);
@@ -252,7 +267,7 @@ router.patch('/:id/status', requireAuth, requireAdmin, async (req, res) => {
 router.put(
   '/:id', 
   requireAuth, 
-  requireAdmin, 
+  requirePermission('manage_bookings'), 
   [
     body('guestName').trim().escape(),
     body('guestEmail').isEmail().normalizeEmail(),

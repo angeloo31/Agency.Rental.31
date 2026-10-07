@@ -1,6 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
 import rateLimit from 'express-rate-limit';
+import { requireAuth, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -49,7 +50,7 @@ router.post('/verify', loginLimiter, async (req, res) => {
 
 // POST /api/admin/import-json
 // Accepts a JSON payload containing settings, categories, extraOptions, vehicles
-router.post('/import-json', async (req, res) => {
+router.post('/import-json', requireAuth, requireAdmin, async (req, res) => {
   try {
     const data = req.body;
     if (!data || typeof data !== 'object') {
@@ -90,6 +91,18 @@ router.post('/import-json', async (req, res) => {
   } catch (error) {
     console.error('[Admin Import] Error:', error.message);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/admin/audit-logs - Retrieves system audit logs for Admin inspection
+router.get('/audit-logs', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const AuditLog = (await import('../models/AuditLog.js')).default;
+    const logs = await AuditLog.find().sort({ createdAt: -1 }).limit(100);
+    res.json(logs);
+  } catch (error) {
+    console.error('[Audit Logs GET Error]:', error.message);
+    res.status(500).json({ error: 'Échec de la récupération des journaux d\'audit.' });
   }
 });
 

@@ -84,7 +84,6 @@ function sanitizeObject(obj) {
   if (!obj || typeof obj !== 'object') return;
   for (const key of Object.keys(obj)) {
     if (key.startsWith('$') || key.includes('.')) {
-      obj['_'] = obj[key];
       delete obj[key];
     } else {
       sanitizeObject(obj[key]);
@@ -126,7 +125,9 @@ const uploadLimiter = rateLimit({
   },
 });
 
-// ── 6. Routes ────────────────────────────────────────────────────────────────
+// Serve uploaded files locally when Cloudinary is bypassed or fallback is triggered
+app.use('/uploads', express.static('public/uploads'));
+
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/bookings', bookingLimiter, bookingRoutes);
 app.use('/api/seed', seedRoutes);

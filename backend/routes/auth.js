@@ -3,12 +3,14 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
 import User from '../models/User.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import { sendOtpEmail } from '../utils/email.js';
+import { getJwtSecret } from '../utils/jwtSecret.js';
+import { logAction } from '../utils/auditLogger.js';
 
 const router = express.Router();
 
-// Helper to seed default admin credentials (admin / admin) if database is empty
+// Helper to seed default admin credentials
 export async function seedDefaultAdmin() {
   try {
     const defaultEmail = process.env.SMTP_USER || 'yahiakrr@gmail.com';
@@ -26,7 +28,6 @@ export async function seedDefaultAdmin() {
       });
       console.log('[Auth] Default Admin seeded: username "admin", password "admin", email "' + defaultEmail + '"');
     } else {
-      // Migrate any existing admin with dummy placeholder email to configured SMTP email
       const updated = await User.updateMany(
         { $or: [{ email: 'admin@luxerent.com' }, { email: { $exists: false } }] },
         { $set: { email: defaultEmail } }
@@ -40,15 +41,21 @@ export async function seedDefaultAdmin() {
   }
 }
 
-// ── Brute-Force Protection for Login ──────────────────────────────────────────
+// ── Brute-Force & Rate Limiting Controls ─────────────────────────────────────
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10, // Max 10 login attempts per IP per 15 minutes
   message: { error: 'Trop de tentatives de connexion. Veuillez patienter 15 minutes.' },
 });
 
+const verificationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5, // Max 5 verification/OTP requests per 15 minutes
+  message: { error: 'Trop de demandes de vérification. Veuillez réessayer dans 15 minutes.' }
+});
+
 const createToken = (_id) => {
-  return jwt.sign({ _id }, process.env.JWT_SECRET || 'fallback_secret_do_not_use_in_prod', { expiresIn: '7d' });
+  return jwt.sign({ _id }, getJwtSecret(), { expiresIn: '7d' });
 };
 
 // POST /api/auth/login
@@ -79,7 +86,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 
       const tempToken = jwt.sign(
         { _id: user._id, type: '2fa_pending' },
-        process.env.JWT_SECRET || 'fallback_secret_do_not_use_in_prod',
+        getJwtSecret(),
         { expiresIn: '10m' }
       );
 
@@ -126,7 +133,7 @@ router.post('/verify-2fa', loginLimiter, async (req, res) => {
   }
 
   try {
-    const payload = jwt.verify(tempToken, process.env.JWT_SECRET || 'fallback_secret_do_not_use_in_prod');
+    const payload = jwt.verify(tempToken, getJwtSecret());
     if (payload.type !== '2fa_pending') {
       return res.status(401).json({ error: 'Jeton de vérification 2FA invalide.' });
     }
@@ -183,8 +190,8 @@ router.get('/me', async (req, res) => {
   }
 
   try {
-    const { _id } = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_do_not_use_in_prod');
-    const user = await User.findById(_id).select('username role email emailVerified twoFactorEnabled');
+    const { _id } = jwt.verify(token, getJwtSecret());
+    const user = await User.findById(_id).select('username role permissions email emailVerified twoFactorEnabled');
     
     if (!user) {
       return res.status(401).json({ error: 'Utilisateur non trouvé' });
@@ -193,6 +200,7 @@ router.get('/me', async (req, res) => {
     res.status(200).json({ 
       username: user.username, 
       role: user.role,
+      permissions: user.permissions || [],
       email: user.email || process.env.SMTP_USER || 'yahiakrr@gmail.com',
       emailVerified: user.emailVerified || false,
       twoFactorEnabled: user.twoFactorEnabled || false
@@ -260,7 +268,7 @@ router.post('/toggle-2fa', requireAuth, async (req, res) => {
 });
 
 // POST /api/auth/send-verification-email
-router.post('/send-verification-email', requireAuth, async (req, res) => {
+router.post('/send-verification-email', verificationLimiter, requireAuth, async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé.' });
@@ -283,7 +291,7 @@ router.post('/send-verification-email', requireAuth, async (req, res) => {
 });
 
 // POST /api/auth/verify-email-code
-router.post('/verify-email-code', requireAuth, async (req, res) => {
+router.post('/verify-email-code', verificationLimiter, requireAuth, async (req, res) => {
   const { code } = req.body;
 
   if (!code) {
@@ -521,6 +529,147 @@ router.post('/setup', async (req, res) => {
   } catch (error) {
     console.error('[Auth] Setup error:', error.message);
     res.status(500).json({ error: 'Échec de la création de l\'administrateur initial.' });
+  }
+});
+
+// ── RBAC User Management Endpoints (Admin Only) ────────────────────────────────
+
+// GET /api/auth/users - List all users
+router.get('/users', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const users = await User.find().select('-passwordHash').sort({ createdAt: -1 });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: 'Échec de la récupération des utilisateurs.' });
+  }
+});
+
+// POST /api/auth/users - Create a Seller/Agent/Admin user
+router.post('/users', requireAuth, requireAdmin, async (req, res) => {
+  const { username, password, role, email, permissions } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Nom d\'utilisateur et mot de passe requis.' });
+  }
+
+  const validRole = ['Admin', 'Seller', 'Agent', 'Customer'].includes(role) ? role : 'Seller';
+
+  try {
+    const existing = await User.findOne({ username: username.trim() });
+    if (existing) {
+      return res.status(400).json({ error: 'Ce nom d\'utilisateur existe déjà.' });
+    }
+
+    const salt = await bcrypt.genSalt(12);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    const newUser = new User({
+      username: username.trim(),
+      passwordHash,
+      role: validRole,
+      email: email ? email.trim().toLowerCase() : process.env.SMTP_USER || 'vendeur@luxerent.com'
+    });
+
+    if (Array.isArray(permissions)) {
+      newUser.permissions = permissions;
+    }
+
+    await newUser.save();
+
+    await logAction({
+      req,
+      action: 'CREATE_USER',
+      resource: 'User',
+      details: `Création du compte ${newUser.role} : ${newUser.username}`
+    });
+
+    res.status(201).json({
+      _id: newUser._id,
+      username: newUser.username,
+      role: newUser.role,
+      permissions: newUser.permissions,
+      email: newUser.email
+    });
+  } catch (error) {
+    console.error('[Auth] User creation error:', error.message);
+    res.status(500).json({ error: 'Échec de la création de l\'utilisateur.' });
+  }
+});
+
+// PATCH /api/auth/users/:id - Update Seller/User account details & permissions (Admin Only)
+router.patch('/users/:id', requireAuth, requireAdmin, async (req, res) => {
+  const { role, permissions, password, email, username } = req.body;
+
+  try {
+    const userToUpdate = await User.findById(req.params.id);
+    if (!userToUpdate) {
+      return res.status(404).json({ error: 'Utilisateur introuvable.' });
+    }
+
+    if (username && username.trim() !== '') {
+      userToUpdate.username = username.trim();
+    }
+
+    if (email && email.trim() !== '') {
+      userToUpdate.email = email.trim().toLowerCase();
+    }
+
+    if (role && ['Admin', 'Seller', 'Agent', 'Customer'].includes(role)) {
+      userToUpdate.role = role;
+    }
+
+    if (Array.isArray(permissions)) {
+      userToUpdate.permissions = permissions;
+    }
+
+    if (password && password.trim() !== '') {
+      const salt = await bcrypt.genSalt(12);
+      userToUpdate.passwordHash = await bcrypt.hash(password.trim(), salt);
+    }
+
+    await userToUpdate.save();
+
+    await logAction({
+      req,
+      action: 'UPDATE_USER_PERMISSIONS',
+      resource: 'User',
+      details: `Mise à jour du compte ${userToUpdate.username} (Rôle: ${userToUpdate.role}, Permissions: [${userToUpdate.permissions.join(', ')}])`
+    });
+
+    res.json({
+      _id: userToUpdate._id,
+      username: userToUpdate.username,
+      role: userToUpdate.role,
+      permissions: userToUpdate.permissions,
+      email: userToUpdate.email
+    });
+  } catch (error) {
+    console.error('[Auth] Update user error:', error.message);
+    res.status(500).json({ error: 'Échec de la mise à jour de l\'utilisateur.' });
+  }
+});
+
+// DELETE /api/auth/users/:id - Delete a user
+router.delete('/users/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    if (String(req.user._id) === String(req.params.id)) {
+      return res.status(400).json({ error: 'Vous ne pouvez pas supprimer votre propre compte.' });
+    }
+
+    const deleted = await User.findByIdAndDelete(req.params.id);
+
+    if (deleted) {
+      await logAction({
+        req,
+        action: 'DELETE_USER',
+        resource: 'User',
+        details: `Suppression du compte ${deleted.username} (${deleted.role})`
+      });
+    }
+
+    res.json({ message: 'Utilisateur supprimé avec succès.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Échec de la suppression de l\'utilisateur.' });
   }
 });
 

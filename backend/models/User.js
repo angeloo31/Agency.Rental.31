@@ -13,9 +13,28 @@ const UserSchema = new mongoose.Schema({
   },
   role: { 
     type: String, 
-    enum: ['Admin', 'Agent'], 
-    default: 'Agent',
+    enum: ['Admin', 'Seller', 'Agent', 'Customer'], 
+    default: 'Seller',
     required: true
+  },
+  permissions: {
+    type: [String],
+    default: function() {
+      if (this.role === 'Admin') {
+        return [
+          'manage_users', 'manage_settings', 'manage_fleet',
+          'manage_bookings', 'view_analytics', 'manage_categories',
+          'manage_extra_options', 'seed_db'
+        ];
+      }
+      if (this.role === 'Seller' || this.role === 'Agent') {
+        return [
+          'manage_bookings', 'create_booking', 'view_fleet',
+          'view_analytics', 'manage_extra_options', 'manage_categories'
+        ];
+      }
+      return [];
+    }
   },
   email: {
     type: String,

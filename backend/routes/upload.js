@@ -1,12 +1,13 @@
 import express from 'express';
 import { upload, detectImageMime, uploadBufferToCloudinary, deleteCloudinaryImage } from '../config/cloudinary.js';
+import { requireAuth, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // POST /api/upload
 // Accepts a single 'image' field, validates its magic-number byte signature,
 // then streams the buffer to Cloudinary via the secure upload helper.
-router.post('/', upload.single('image'), async (req, res) => {
+router.post('/', requireAuth, requireAdmin, upload.single('image'), async (req, res) => {
   // ── 1. Presence Check ────────────────────────────────────────────────────
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded.' });
@@ -24,19 +25,38 @@ router.post('/', upload.single('image'), async (req, res) => {
     });
   }
 
-  // ── 3. Stream Verified Buffer to Cloudinary ───────────────────────────────
+  // ── 3. Stream Verified Buffer to Cloudinary (with Local Disk Fallback) ───
   try {
     const result = await uploadBufferToCloudinary(req.file.buffer);
     return res.status(200).json({ url: result.secure_url });
   } catch (error) {
-    console.error('[Upload] Cloudinary stream error:', error.message);
-    return res.status(500).json({ error: 'Failed to upload image. Please try again.' });
+    console.warn('[Upload] Cloudinary stream unavailable/failed, using local fallback:', error.message);
+    try {
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      const fileUrlPath = await import('url');
+
+      const __dirname = path.dirname(fileUrlPath.fileURLToPath(import.meta.url));
+      const uploadsDir = path.join(__dirname, '../public/uploads');
+
+      await fs.mkdir(uploadsDir, { recursive: true });
+
+      const ext = detectedMime === 'image/png' ? 'png' : detectedMime === 'image/webp' ? 'webp' : 'jpg';
+      const filename = `img_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
+      const filePath = path.join(uploadsDir, filename);
+
+      await fs.writeFile(filePath, req.file.buffer);
+      return res.status(200).json({ url: `/uploads/${filename}` });
+    } catch (localErr) {
+      console.error('[Upload] Local storage fallback failed:', localErr.message);
+      return res.status(500).json({ error: 'Failed to upload image.' });
+    }
   }
 });
 
 // DELETE /api/upload
 // Accepts { url } in body to immediately destroy the specified Cloudinary asset.
-router.delete('/', async (req, res) => {
+router.delete('/', requireAuth, requireAdmin, async (req, res) => {
   const { url } = req.body || req.query;
   if (!url) {
     return res.status(400).json({ error: 'Image URL is required for deletion.' });

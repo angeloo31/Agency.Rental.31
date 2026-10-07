@@ -62,6 +62,32 @@ export default function CalendarTab({
 
   // Selected Hover/Clicked Booking for Details Modal
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [draggedBooking, setDraggedBooking] = useState<Booking | null>(null);
+
+  // Handle Gantt Drag & Drop Rescheduling
+  const handleBookingDrop = (targetVehicleId: string, targetDateIso: string) => {
+    if (!draggedBooking) return;
+
+    const start = new Date(draggedBooking.pickupDate);
+    const end = new Date(draggedBooking.returnDate);
+    const durationMs = end.getTime() - start.getTime();
+
+    const newStart = new Date(targetDateIso);
+    // Keep pickup time of original booking
+    newStart.setHours(start.getHours(), start.getMinutes(), 0, 0);
+
+    const newEnd = new Date(newStart.getTime() + (isNaN(durationMs) ? 86400000 : durationMs));
+
+    const updatedBooking: Booking = {
+      ...draggedBooking,
+      vehicleId: targetVehicleId,
+      pickupDate: newStart.toISOString(),
+      returnDate: newEnd.toISOString()
+    };
+
+    setDraggedBooking(null);
+    onOpenEditBooking(updatedBooking);
+  };
 
   // Computed Year & Month
   const year = currentDate.getFullYear();
@@ -415,13 +441,17 @@ export default function CalendarTab({
                               <td
                                 key={day.dayNumber}
                                 onClick={() => setSelectedBooking(activeBooking)}
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={() => handleBookingDrop(vehicle._id, day.dateIso)}
                                 className={`p-0 text-center border-r border-slate-100 cursor-pointer relative ${
                                   day.isToday ? 'bg-indigo-50/30' : ''
                                 }`}
                               >
                                 <div
-                                  className={`h-9 m-0.5 rounded-md ${style.bg} ${style.text} flex items-center justify-center px-1 shadow-xs hover:opacity-90 transition-opacity relative group/bar`}
-                                  title={`${activeBooking.guestName} (${activeBooking.bookingStatus}) - Cliquez pour détails`}
+                                  draggable
+                                  onDragStart={() => setDraggedBooking(activeBooking)}
+                                  className={`h-9 m-0.5 rounded-md ${style.bg} ${style.text} flex items-center justify-center px-1 shadow-xs hover:opacity-90 active:scale-95 transition-all relative group/bar cursor-grab active:cursor-grabbing`}
+                                  title={`${activeBooking.guestName} (${activeBooking.bookingStatus}) - Glissez pour déplacer, cliquez pour détails`}
                                 >
                                   {isStartDay ? (
                                     <span className="text-[10px] font-black truncate px-1 drop-shadow-sm">
@@ -435,10 +465,12 @@ export default function CalendarTab({
                             );
                           }
 
-                          // Empty cell: allowed to click to create new booking
+                          // Empty cell: allowed to click or drop dragged booking
                           return (
                             <td
                               key={day.dayNumber}
+                              onDragOver={(e) => e.preventDefault()}
+                              onDrop={() => handleBookingDrop(vehicle._id, day.dateIso)}
                               onClick={() => {
                                 if (onOpenNewBookingWithVehicleAndDate) {
                                   onOpenNewBookingWithVehicleAndDate(vehicle._id, day.dateIso);
@@ -449,7 +481,7 @@ export default function CalendarTab({
                               className={`p-0 text-center border-r border-slate-100 hover:bg-indigo-50/50 transition-colors cursor-pointer relative group/empty ${
                                 day.isToday ? 'bg-indigo-50/20' : day.isWeekend ? 'bg-slate-50/50' : ''
                               }`}
-                              title={`Créer une réservation pour ${vehicleTitle} le ${day.dayNumber} ${monthName}`}
+                              title={`Glisser ici pour replacer ou cliquer pour créer une réservation (${vehicleTitle})`}
                             >
                               <div className="h-9 flex items-center justify-center opacity-0 group-hover/empty:opacity-100 transition-opacity">
                                 <Plus className="w-3.5 h-3.5 text-indigo-400" />

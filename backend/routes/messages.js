@@ -1,33 +1,52 @@
 import express from 'express';
 import mongoose from 'mongoose';
+import rateLimit from 'express-rate-limit';
+import { body, validationResult } from 'express-validator';
 import Message from '../models/Message.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
+const messageLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10, // 10 contact messages per IP per 15 minutes
+  message: { error: 'Too many messages sent. Please wait 15 minutes before sending another message.' }
+});
+
 // ── POST /api/messages ────────────────────────────────────────────────────────
 // Public route for clients to submit a contact form message.
-router.post('/', async (req, res) => {
-  try {
-    const { name, email, subject, message } = req.body;
-
-    if (!name || !email || !subject || !message) {
-      return res.status(400).json({ error: 'All fields are required.' });
+router.post(
+  '/',
+  messageLimiter,
+  [
+    body('name').trim().notEmpty().isLength({ max: 100 }).escape(),
+    body('email').trim().isEmail().normalizeEmail(),
+    body('subject').trim().notEmpty().isLength({ max: 200 }).escape(),
+    body('message').trim().notEmpty().isLength({ max: 2000 }).escape()
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ error: errors.array()[0].msg || 'Invalid contact message data.' });
     }
 
-    const newMessage = await Message.create({
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      subject: subject.trim(),
-      message: message.trim(),
-    });
+    try {
+      const { name, email, subject, message } = req.body;
 
-    res.status(201).json(newMessage);
-  } catch (error) {
-    console.error('[Messages] POST error:', error.message);
-    res.status(500).json({ error: 'Message could not be sent.' });
+      const newMessage = await Message.create({
+        name,
+        email,
+        subject,
+        message
+      });
+
+      res.status(201).json(newMessage);
+    } catch (error) {
+      console.error('[Messages] POST error:', error.message);
+      res.status(500).json({ error: 'Message could not be sent.' });
+    }
   }
-});
+);
 
 // ── GET /api/messages ─────────────────────────────────────────────────────────
 // Protected admin route to fetch all messages

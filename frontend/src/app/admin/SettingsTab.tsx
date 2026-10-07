@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Image as ImageIcon, MapPin, Plus, Trash2, Globe2, Sparkles, Film, Layout, Lock, Shield, Key, Mail, CheckCircle2, ShieldAlert, ShieldCheck, X } from 'lucide-react';
+import { Save, Image as ImageIcon, MapPin, Plus, Trash2, Globe2, Sparkles, Film, Layout, Lock, Shield, Key, Mail, CheckCircle2, ShieldAlert, ShieldCheck, X, Users, UserPlus, FileText, Check, History, Edit3 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
@@ -24,7 +24,7 @@ export default function SettingsTab() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [activeSection, setActiveSection] = useState<'general' | 'hero' | 'about' | 'footer' | 'locations' | 'faq' | 'currencies' | 'security'>('general');
+  const [activeSection, setActiveSection] = useState<'general' | 'hero' | 'about' | 'footer' | 'locations' | 'faq' | 'currencies' | 'security' | 'sellers' | 'audit'>('general');
   const [activeCropFile, setActiveCropFile] = useState<File | null>(null);
 
   // Security credentials change state
@@ -50,6 +50,156 @@ export default function SettingsTab() {
   const [sendingEmailCode, setSendingEmailCode] = useState(false);
   const [verifyingEmailCode, setVerifyingEmailCode] = useState(false);
   const [devVerificationCode, setDevVerificationCode] = useState('');
+
+  // Sellers / Users Management State
+  const [usersList, setUsersList] = useState<any[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<any | null>(null);
+  const [userForm, setUserForm] = useState({
+    username: '',
+    email: '',
+    password: '',
+    role: 'Seller',
+    permissions: [] as string[],
+  });
+  const [savingUser, setSavingUser] = useState(false);
+
+  // Audit Logs State
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+
+  const ALL_PERMISSIONS = [
+    { key: 'manage_bookings', label: 'Gérer les réservations' },
+    { key: 'create_booking', label: 'Créer de nouvelles réservations' },
+    { key: 'view_fleet', label: 'Consulter la flotte' },
+    { key: 'manage_fleet', label: 'Gérer la flotte (ajouter/modifier)' },
+    { key: 'view_analytics', label: 'Consulter les statistiques & rapports' },
+    { key: 'manage_categories', label: 'Gérer les catégories' },
+    { key: 'manage_extra_options', label: 'Gérer les options supplémentaires' },
+  ];
+
+  const fetchUsersList = async () => {
+    setLoadingUsers(true);
+    try {
+      const res = await fetch('/api/auth/users', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUsersList(data);
+      }
+    } catch (e) {
+      console.error('Error fetching users:', e);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const fetchAuditLogsList = async () => {
+    setLoadingLogs(true);
+    try {
+      const res = await fetch('/api/admin/audit-logs', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAuditLogs(data);
+      }
+    } catch (e) {
+      console.error('Error fetching audit logs:', e);
+    } finally {
+      setLoadingLogs(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeSection === 'sellers') {
+      fetchUsersList();
+    } else if (activeSection === 'audit') {
+      fetchAuditLogsList();
+    }
+  }, [activeSection, token]);
+
+  const handleOpenUserModal = (userToEdit?: any) => {
+    if (userToEdit) {
+      setEditingUser(userToEdit);
+      setUserForm({
+        username: userToEdit.username || '',
+        email: userToEdit.email || '',
+        password: '',
+        role: userToEdit.role || 'Seller',
+        permissions: Array.isArray(userToEdit.permissions) ? userToEdit.permissions : [],
+      });
+    } else {
+      setEditingUser(null);
+      setUserForm({
+        username: '',
+        email: '',
+        password: '',
+        role: 'Seller',
+        permissions: ['manage_bookings', 'create_booking', 'view_fleet'],
+      });
+    }
+    setShowUserModal(true);
+  };
+
+  const handleSaveUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingUser(true);
+    try {
+      const url = editingUser ? `/api/auth/users/${editingUser._id}` : '/api/auth/users';
+      const method = editingUser ? 'PATCH' : 'POST';
+      const bodyPayload: any = {
+        username: userForm.username,
+        email: userForm.email,
+        role: userForm.role,
+        permissions: userForm.permissions,
+      };
+      if (userForm.password) {
+        bodyPayload.password = userForm.password;
+      }
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(bodyPayload)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(editingUser ? 'Compte mis à jour avec succès !' : 'Nouveau vendeur créé !');
+        setShowUserModal(false);
+        fetchUsersList();
+      } else {
+        toast.error(data.error || 'Échec de l\'opération.');
+      }
+    } catch (e) {
+      toast.error('Erreur lors de la sauvegarde.');
+    } finally {
+      setSavingUser(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string, targetUsername: string) => {
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer le compte "${targetUsername}" ?`)) return;
+    try {
+      const res = await fetch(`/api/auth/users/${userId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success('Compte utilisateur supprimé.');
+        fetchUsersList();
+      } else {
+        toast.error(data.error || 'Impossible de supprimer cet utilisateur.');
+      }
+    } catch (e) {
+      toast.error('Erreur lors de la suppression.');
+    }
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -524,6 +674,12 @@ export default function SettingsTab() {
           </button>
           <button onClick={() => setActiveSection('security')} className={`px-4 py-3 lg:p-4 rounded-2xl text-left font-bold transition-all whitespace-nowrap shrink-0 text-sm lg:text-base ${activeSection === 'security' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/60'}`}>
             🔒 Sécurité & Accès
+          </button>
+          <button onClick={() => setActiveSection('sellers')} className={`px-4 py-3 lg:p-4 rounded-2xl text-left font-bold transition-all whitespace-nowrap shrink-0 text-sm lg:text-base ${activeSection === 'sellers' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/60'}`}>
+            👥 Vendeurs & Comptes
+          </button>
+          <button onClick={() => setActiveSection('audit')} className={`px-4 py-3 lg:p-4 rounded-2xl text-left font-bold transition-all whitespace-nowrap shrink-0 text-sm lg:text-base ${activeSection === 'audit' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/60'}`}>
+            📜 Journaux d'Audit
           </button>
         </div>
 
@@ -1638,6 +1794,184 @@ export default function SettingsTab() {
               </form>
             </div>
           )}
+
+          {/* SELLERS / USERS MANAGEMENT SECTION */}
+          {activeSection === 'sellers' && (
+            <div>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div>
+                  <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                    <Users className="w-6 h-6 text-indigo-600" /> Gestion des Vendeurs & Comptes
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-1">
+                    Gérez les identifiants, rôles et permissions d'accès granulaires de votre équipe.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleOpenUserModal()}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-4 py-2.5 rounded-xl text-xs shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2"
+                >
+                  <UserPlus className="w-4 h-4" /> Nouveau Vendeur / Compte
+                </button>
+              </div>
+
+              {loadingUsers ? (
+                <div className="py-12 text-center text-slate-400 font-medium text-sm">
+                  Chargement des utilisateurs...
+                </div>
+              ) : usersList.length === 0 ? (
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-8 text-center">
+                  <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                  <p className="font-extrabold text-slate-700 text-sm">Aucun compte vendeur configuré</p>
+                  <p className="text-xs text-slate-400 mt-1 mb-4">Créez votre premier vendeur pour lui accorder des accès restreints.</p>
+                  <button
+                    onClick={() => handleOpenUserModal()}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold px-4 py-2.5 rounded-xl"
+                  >
+                    + Créer un Vendeur
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {usersList.map((usr) => (
+                    <div
+                      key={usr._id}
+                      className="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 rounded-2xl p-5 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                    >
+                      <div className="space-y-2 flex-1">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 font-black flex items-center justify-center text-sm uppercase">
+                            {usr.username?.substring(0, 2) || 'US'}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-extrabold text-slate-900 text-sm">{usr.username}</h4>
+                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                                usr.role === 'Admin' ? 'bg-purple-100 text-purple-800 border-purple-200' :
+                                usr.role === 'Seller' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                                usr.role === 'Agent' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
+                                'bg-slate-200 text-slate-700 border-slate-300'
+                              }`}>
+                                {usr.role || 'User'}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-500 font-medium">{usr.email || 'Pas d\'email renseigné'}</p>
+                          </div>
+                        </div>
+
+                        {/* Permissions pills */}
+                        {usr.role !== 'Admin' && (
+                          <div className="pt-2 flex flex-wrap gap-1.5">
+                            {Array.isArray(usr.permissions) && usr.permissions.length > 0 ? (
+                              usr.permissions.map((p: string) => {
+                                const matched = ALL_PERMISSIONS.find((ap) => ap.key === p);
+                                return (
+                                  <span key={p} className="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200/60 rounded-lg text-[10px] font-bold">
+                                    ✓ {matched ? matched.label : p}
+                                  </span>
+                                );
+                              })
+                            ) : (
+                              <span className="text-[11px] text-slate-400 italic">Aucune permission granulaire attribuée</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenUserModal(usr)}
+                          className="px-3 py-2 bg-white hover:bg-slate-200 text-slate-700 rounded-xl border border-slate-300 font-bold text-xs transition-all flex items-center gap-1.5"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" /> Modifier
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteUser(usr._id, usr.username)}
+                          disabled={usr.username === currentAuthUsername}
+                          className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl border border-rose-200 font-bold text-xs transition-all flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Supprimer
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* AUDIT LOGS SECTION */}
+          {activeSection === 'audit' && (
+            <div>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                  <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                    <History className="w-6 h-6 text-indigo-600" /> Journaux d'Audit Système & Sécurité
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-1">
+                    Traçabilité complète des actions d'administration, créations, modifications et suppressions.
+                  </p>
+                </div>
+                <button
+                  onClick={fetchAuditLogsList}
+                  className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-all"
+                >
+                  Actualiser les logs
+                </button>
+              </div>
+
+              {loadingLogs ? (
+                <div className="py-12 text-center text-slate-400 font-medium text-sm">
+                  Chargement de l'historique d'audit...
+                </div>
+              ) : auditLogs.length === 0 ? (
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-8 text-center text-slate-500 text-xs font-medium">
+                  Aucune entrée enregistrée dans les journaux d'audit pour le moment.
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-2xl border border-slate-200/80">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-100/80 text-[11px] font-black uppercase text-slate-600 border-b border-slate-200/80">
+                        <th className="p-3.5">Date & Heure</th>
+                        <th className="p-3.5">Utilisateur</th>
+                        <th className="p-3.5">Action</th>
+                        <th className="p-3.5">Ressource</th>
+                        <th className="p-3.5">IP</th>
+                        <th className="p-3.5">Détails</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200/60 text-xs font-medium text-slate-700">
+                      {auditLogs.map((log) => (
+                        <tr key={log._id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="p-3.5 font-mono text-[11px] text-slate-500 whitespace-nowrap">
+                            {log.createdAt ? new Date(log.createdAt).toLocaleString('fr-FR') : '-'}
+                          </td>
+                          <td className="p-3.5">
+                            <span className="font-bold text-slate-900">{log.username || 'Système'}</span>
+                            {log.role && <span className="ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-slate-200 text-slate-700">{log.role}</span>}
+                          </td>
+                          <td className="p-3.5">
+                            <span className="px-2 py-0.5 rounded-full font-bold text-[10px] bg-indigo-50 text-indigo-800 border border-indigo-200">
+                              {log.action}
+                            </span>
+                          </td>
+                          <td className="p-3.5 font-bold text-slate-800">{log.resource || '-'}</td>
+                          <td className="p-3.5 font-mono text-[11px] text-slate-500">{log.ipAddress || '-'}</td>
+                          <td className="p-3.5 text-slate-600 max-w-xs truncate">
+                            {typeof log.details === 'object' ? JSON.stringify(log.details) : log.details || '-'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
       {activeCropFile && (
@@ -1647,6 +1981,139 @@ export default function SettingsTab() {
           onCrop={performLogoUpload}
           aspectRatio="logo"
         />
+      )}
+
+      {/* Modal Créer / Modifier Utilisateur/Vendeur */}
+      {showUserModal && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-slate-200 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button
+              type="button"
+              onClick={() => setShowUserModal(false)}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
+                <UserPlus className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-slate-900">
+                  {editingUser ? 'Modifier le Compte' : 'Nouveau Vendeur / Utilisateur'}
+                </h3>
+                <p className="text-xs text-slate-500 font-medium">
+                  {editingUser ? `Modification des accès de ${editingUser.username}` : 'Configurez les accès et autorisations.'}
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveUser} className="space-y-5">
+              <div>
+                <label className="block text-xs uppercase font-extrabold text-slate-700 mb-1.5">
+                  Nom d'utilisateur <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="ex: seller_alger"
+                  value={userForm.username}
+                  onChange={(e) => setUserForm({ ...userForm, username: e.target.value })}
+                  className="w-full p-3 rounded-xl border border-slate-200 font-bold text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase font-extrabold text-slate-700 mb-1.5">
+                  Adresse E-mail <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="vendeur@luxerent.com"
+                  value={userForm.email}
+                  onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                  className="w-full p-3 rounded-xl border border-slate-200 font-medium text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase font-extrabold text-slate-700 mb-1.5">
+                  Mot de passe {editingUser && <span className="text-slate-400 font-normal">(Laissez vide pour conserver)</span>}
+                </label>
+                <input
+                  type="password"
+                  required={!editingUser}
+                  placeholder="••••••••"
+                  value={userForm.password}
+                  onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                  className="w-full p-3 rounded-xl border border-slate-200 font-medium text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase font-extrabold text-slate-700 mb-1.5">
+                  Rôle de l'utilisateur
+                </label>
+                <select
+                  value={userForm.role}
+                  onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
+                  className="w-full p-3 rounded-xl border border-slate-200 font-extrabold text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                >
+                  <option value="Seller">Vendeur / Seller (Accès aux ventes & réservations)</option>
+                  <option value="Agent">Agent d'Agence (Gestion du parc & réceptions)</option>
+                  <option value="Admin">Administrateur Général (Accès complet)</option>
+                  <option value="Customer">Client (Espace client standard)</option>
+                </select>
+              </div>
+
+              {/* Permissions granular checkable list */}
+              {userForm.role !== 'Admin' && (
+                <div className="pt-3 border-t border-slate-200">
+                  <label className="block text-xs uppercase font-extrabold text-indigo-900 mb-2">
+                    Permissions Granulaires Accordées
+                  </label>
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    {ALL_PERMISSIONS.map((perm) => {
+                      const isChecked = userForm.permissions.includes(perm.key);
+                      return (
+                        <label
+                          key={perm.key}
+                          className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
+                            isChecked ? 'bg-indigo-50/80 border-indigo-300 text-indigo-900' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                          }`}
+                        >
+                          <span className="text-xs font-bold">{perm.label}</span>
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setUserForm({ ...userForm, permissions: [...userForm.permissions, perm.key] });
+                              } else {
+                                setUserForm({ ...userForm, permissions: userForm.permissions.filter((p) => p !== perm.key) });
+                              }
+                            }}
+                            className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                          />
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={savingUser}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3.5 rounded-xl shadow-lg shadow-indigo-600/20 text-sm transition-all disabled:bg-slate-300 mt-4"
+              >
+                {savingUser ? 'Enregistrement...' : editingUser ? 'Mettre à jour le Compte' : 'Créer le Compte Vendeur'}
+              </button>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Modal Verification E-mail */}
