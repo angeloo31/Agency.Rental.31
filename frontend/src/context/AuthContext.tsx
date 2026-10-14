@@ -55,10 +55,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (username: string, role: Role, token: string, permissions?: string[]) => {
     // The backend already set the httpOnly cookie
+    const userPermissions = (role === 'Admin' && (!permissions || permissions.length === 0))
+      ? [
+          'manage_users', 'manage_settings', 'manage_fleet',
+          'manage_bookings', 'create_booking', 'view_fleet',
+          'view_analytics', 'manage_categories', 'manage_extra_options',
+          'manage_messages', 'seed_db'
+        ]
+      : (Array.isArray(permissions) ? permissions : []);
+
     setAuthState({
       username,
       role,
-      permissions: permissions || [],
+      permissions: userPermissions,
       token: null,
       isAuthenticated: true
     });

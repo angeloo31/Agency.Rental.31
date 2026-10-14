@@ -1,13 +1,13 @@
 import express from 'express';
 import { upload, detectImageMime, uploadBufferToCloudinary, deleteCloudinaryImage } from '../config/cloudinary.js';
-import { requireAuth, requireAdmin } from '../middleware/auth.js';
+import { requireAuth, requirePermission } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // POST /api/upload
 // Accepts a single 'image' field, validates its magic-number byte signature,
 // then streams the buffer to Cloudinary via the secure upload helper.
-router.post('/', requireAuth, requireAdmin, upload.single('image'), async (req, res) => {
+router.post('/', requireAuth, requirePermission('manage_fleet'), upload.single('image'), async (req, res) => {
   // ── 1. Presence Check ────────────────────────────────────────────────────
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded.' });
@@ -56,7 +56,7 @@ router.post('/', requireAuth, requireAdmin, upload.single('image'), async (req, 
 
 // DELETE /api/upload
 // Accepts { url } in body to immediately destroy the specified Cloudinary asset.
-router.delete('/', requireAuth, requireAdmin, async (req, res) => {
+router.delete('/', requireAuth, requirePermission('manage_fleet'), async (req, res) => {
   const { url } = req.body || req.query;
   if (!url) {
     return res.status(400).json({ error: 'Image URL is required for deletion.' });

@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import rateLimit from 'express-rate-limit';
 import { body, validationResult } from 'express-validator';
 import Message from '../models/Message.js';
-import { requireAuth, requireAdmin } from '../middleware/auth.js';
+import { requireAuth, requirePermission } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -50,7 +50,7 @@ router.post(
 
 // ── GET /api/messages ─────────────────────────────────────────────────────────
 // Protected admin route to fetch all messages
-router.get('/', requireAuth, requireAdmin, async (req, res) => {
+router.get('/', requireAuth, requirePermission('manage_messages'), async (req, res) => {
   try {
     const messages = await Message.find().sort({ createdAt: -1 });
     res.json(messages);
@@ -62,7 +62,7 @@ router.get('/', requireAuth, requireAdmin, async (req, res) => {
 
 // ── PATCH /api/messages/:id/read ──────────────────────────────────────────────
 // Protected admin route to mark a message as Read/Unread
-router.patch('/:id/read', requireAuth, requireAdmin, async (req, res) => {
+router.patch('/:id/read', requireAuth, requirePermission('manage_messages'), async (req, res) => {
   try {
     const { status } = req.body;
     
@@ -93,7 +93,7 @@ router.patch('/:id/read', requireAuth, requireAdmin, async (req, res) => {
 
 // ── DELETE /api/messages/:id ──────────────────────────────────────────────────
 // Protected admin route to delete a message
-router.delete('/:id', requireAuth, requireAdmin, async (req, res) => {
+router.delete('/:id', requireAuth, requirePermission('manage_messages'), async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: 'Invalid message ID format.' });

@@ -70,13 +70,14 @@ export default function SettingsTab() {
   const [loadingLogs, setLoadingLogs] = useState(false);
 
   const ALL_PERMISSIONS = [
-    { key: 'manage_bookings', label: 'Gérer les réservations' },
+    { key: 'manage_bookings', label: 'Gérer les réservations & clients' },
     { key: 'create_booking', label: 'Créer de nouvelles réservations' },
     { key: 'view_fleet', label: 'Consulter la flotte' },
-    { key: 'manage_fleet', label: 'Gérer la flotte (ajouter/modifier)' },
-    { key: 'view_analytics', label: 'Consulter les statistiques & rapports' },
+    { key: 'manage_fleet', label: 'Gérer la flotte (ajouter/modifier/supprimer)' },
+    { key: 'view_analytics', label: 'Consulter les statistiques & tableau de bord' },
     { key: 'manage_categories', label: 'Gérer les catégories' },
     { key: 'manage_extra_options', label: 'Gérer les options supplémentaires' },
+    { key: 'manage_messages', label: 'Consulter & gérer les messages clients' },
   ];
 
   const fetchUsersList = async () => {
@@ -154,7 +155,7 @@ export default function SettingsTab() {
         username: userForm.username,
         email: userForm.email,
         role: userForm.role,
-        permissions: userForm.permissions,
+        permissions: userForm.role === 'Admin' ? ALL_PERMISSIONS.map(p => p.key) : userForm.permissions,
       };
       if (userForm.password) {
         bodyPayload.password = userForm.password;
@@ -2058,7 +2059,16 @@ export default function SettingsTab() {
                 </label>
                 <select
                   value={userForm.role}
-                  onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
+                  onChange={(e) => {
+                    const newRole = e.target.value;
+                    setUserForm({
+                      ...userForm,
+                      role: newRole,
+                      permissions: newRole === 'Admin' 
+                        ? ALL_PERMISSIONS.map(p => p.key)
+                        : (userForm.permissions.length > 0 ? userForm.permissions : ['manage_bookings', 'create_booking', 'view_fleet'])
+                    });
+                  }}
                   className="w-full p-3 rounded-xl border border-slate-200 font-extrabold text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
                 >
                   <option value="Seller">Vendeur / Seller (Accès aux ventes & réservations)</option>

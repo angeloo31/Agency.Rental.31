@@ -27,7 +27,7 @@ import BrandLogo, { POPULAR_BRANDS } from '@/components/BrandLogo';
 export default function AdminDashboard() {
   const { t, locale } = useLanguage();
   const { settings } = useSettings();
-  const { isAuthenticated, role, token, login, logout } = useAuth();
+  const { isAuthenticated, role, permissions, token, login, logout, hasPermission } = useAuth();
   const { confirm } = useConfirm();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -388,7 +388,7 @@ export default function AdminDashboard() {
           setDevOtpCode(data.devOtpCode || '');
           toast.success(data.message || 'Code 2FA envoyé !');
         } else {
-          login(data.username, data.role, data.token);
+          login(data.username, data.role, data.token, data.permissions);
         }
       } else {
         setLoginError(data.error || 'Login failed');
@@ -416,7 +416,7 @@ export default function AdminDashboard() {
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
         toast.success(data.message || 'Authentification 2FA réussie !');
-        login(data.username, data.role, data.token);
+        login(data.username, data.role, data.token, data.permissions);
         setRequires2FA(false);
         setOtpInput('');
       } else {
@@ -496,8 +496,32 @@ export default function AdminDashboard() {
     }
   };
 
+  const canAccessTab = (tabId: string): boolean => {
+    if (role === 'Admin') return true;
+    switch (tabId) {
+      case 'dashboard':
+        return hasPermission('view_analytics');
+      case 'calendar':
+      case 'bookings':
+      case 'clients':
+        return hasPermission('manage_bookings');
+      case 'fleet':
+        return hasPermission('view_fleet') || hasPermission('manage_fleet');
+      case 'categories':
+        return hasPermission('manage_categories');
+      case 'options':
+        return hasPermission('manage_extra_options');
+      case 'messages':
+        return hasPermission('manage_messages');
+      case 'settings':
+        return hasPermission('manage_settings');
+      default:
+        return false;
+    }
+  };
+
   const fetchUnreadCount = async () => {
-    if (role !== 'Admin') return;
+    if (!canAccessTab('messages')) return;
     try {
       const res = await fetch('/api/messages', {
         headers: {
@@ -518,19 +542,44 @@ export default function AdminDashboard() {
 
   const loadAllData = async () => {
     setLoading(true);
-    await Promise.all([fetchBookings(), fetchVehicles(), fetchCategories(), fetchUnreadCount()]);
+    const promises: Promise<any>[] = [];
+    if (canAccessTab('bookings') || canAccessTab('calendar') || canAccessTab('dashboard') || canAccessTab('clients')) {
+      promises.push(fetchBookings());
+    }
+    if (canAccessTab('fleet') || canAccessTab('calendar')) {
+      promises.push(fetchVehicles());
+    }
+    if (canAccessTab('categories') || canAccessTab('fleet') || canAccessTab('calendar')) {
+      promises.push(fetchCategories());
+    }
+    if (canAccessTab('messages')) {
+      promises.push(fetchUnreadCount());
+    }
+    await Promise.all(promises);
     setLoading(false);
   };
 
   useEffect(() => {
     if (isAuthenticated) {
       loadAllData();
-      if (role === 'Admin') {
+      if (canAccessTab('messages')) {
         const interval = setInterval(fetchUnreadCount, 15000);
         return () => clearInterval(interval);
       }
     }
-  }, [isAuthenticated, token, role]);
+  }, [isAuthenticated, token, role, permissions]);
+
+  useEffect(() => {
+    if (isAuthenticated && role) {
+      if (!canAccessTab(activeTab)) {
+        const tabOrder = ['dashboard', 'calendar', 'bookings', 'clients', 'fleet', 'categories', 'options', 'messages', 'settings'];
+        const firstAllowed = tabOrder.find((t) => canAccessTab(t));
+        if (firstAllowed) {
+          setActiveTab(firstAllowed as any);
+        }
+      }
+    }
+  }, [isAuthenticated, role, permissions, activeTab]);
 
   const seedDatabase = async () => {
     setSeeding(true);
@@ -1303,15 +1352,15 @@ export default function AdminDashboard() {
 
   // Navigation Menu Items
   const navItems = [
-    { id: 'dashboard', label: t('dashboard'), icon: BarChart3, adminOnly: true },
-    { id: 'calendar', label: 'Planning & Calendrier', icon: CalendarDays, adminOnly: true },
-    { id: 'bookings', label: t('bookingLogs'), icon: CalendarIcon, adminOnly: true },
-    { id: 'clients', label: t('clientsDatabase') || 'Clients Database', icon: Users, adminOnly: true },
-    { id: 'fleet', label: t('fleetManager'), icon: Car, adminOnly: false },
-    { id: 'categories', label: t('categories'), icon: Layers, adminOnly: true },
-    { id: 'options', label: t('extraOptions') || 'Options & Add-ons', icon: Plus, adminOnly: true },
-    { id: 'messages', label: t('messages'), icon: Mail, adminOnly: true },
-    { id: 'settings', label: t('settings'), icon: Settings, adminOnly: true },
+    { id: 'dashboard', label: t('dashboard'), icon: BarChart3 },
+    { id: 'calendar', label: 'Planning & Calendrier', icon: CalendarDays },
+    { id: 'bookings', label: t('bookingLogs'), icon: CalendarIcon },
+    { id: 'clients', label: t('clientsDatabase') || 'Clients Database', icon: Users },
+    { id: 'fleet', label: t('fleetManager'), icon: Car },
+    { id: 'categories', label: t('categories'), icon: Layers },
+    { id: 'options', label: t('extraOptions') || 'Options & Add-ons', icon: Plus },
+    { id: 'messages', label: t('messages'), icon: Mail },
+    { id: 'settings', label: t('settings'), icon: Settings },
   ];
 
   // Dashboard Main UI
@@ -1341,7 +1390,7 @@ export default function AdminDashboard() {
 
         <nav className="flex md:flex-col overflow-x-auto md:overflow-y-auto py-2.5 md:py-6 px-3 sm:px-4 gap-1.5 scrollbar-hide shrink-0 whitespace-nowrap">
           {navItems.map((item) => {
-            if (item.adminOnly && role !== 'Admin') return null;
+            if (!canAccessTab(item.id)) return null;
             const isActive = activeTab === item.id;
             const showMessageBadge = item.id === 'messages' && unreadCount > 0;
             return (
@@ -1412,8 +1461,8 @@ export default function AdminDashboard() {
         {/* Scrollable Tab Content */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 bg-slate-50/50 relative">
 
-      {/* TAB 0: Dashboard (Admin Only) */}
-      {activeTab === 'dashboard' && role === 'Admin' && (
+      {/* TAB 0: Dashboard (Requires view_analytics permission) */}
+      {activeTab === 'dashboard' && canAccessTab('dashboard') && (
         <div className="animate-in fade-in duration-500 slide-in-from-bottom-4 space-y-8">
           
           {/* Dashboard Header & Period Filter Bar */}
@@ -1839,14 +1888,18 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* TAB 0.5: Planning Calendar (Admin Only) */}
-      {activeTab === 'calendar' && role === 'Admin' && (
+      {/* TAB 0.5: Planning Calendar (Requires manage_bookings permission) */}
+      {activeTab === 'calendar' && canAccessTab('calendar') && (
         <CalendarTab
           bookings={bookings}
           vehicles={vehicles}
           categories={categoriesData}
           onOpenEditBooking={openEditBookingModal}
           onOpenNewBookingWithVehicleAndDate={(vehicleId, dateStr) => {
+            if (!hasPermission('create_booking') && !hasPermission('manage_bookings') && role !== 'Admin') {
+              toast.error('Permission requise pour créer une réservation');
+              return;
+            }
             setEditingBooking(null);
             setBookingForm({
               guestName: '', guestEmail: '', guestPhone: '',
@@ -1859,21 +1912,23 @@ export default function AdminDashboard() {
             });
             setIsBookingModalOpen(true);
           }}
-          onOpenNewBooking={openBookingModal}
+          onOpenNewBooking={(hasPermission('create_booking') || hasPermission('manage_bookings') || role === 'Admin') ? openBookingModal : () => toast.error('Permission requise pour créer une réservation')}
         />
       )}
 
-      {/* TAB 1: Booking logs (Admin Only) */}
-      {activeTab === 'bookings' && role === 'Admin' && (
+      {/* TAB 1: Booking logs (Requires manage_bookings permission) */}
+      {activeTab === 'bookings' && canAccessTab('bookings') && (
         <div className="animate-in fade-in duration-500 slide-in-from-bottom-4">
-          <div className="flex justify-end mb-6">
-            <button
-              onClick={openBookingModal}
-              className="bg-indigo-600 text-white px-6 py-3.5 rounded-2xl font-black hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2 shadow-xl shadow-indigo-600/20"
-            >
-              <Plus className="w-5 h-5" /> {t('newReservation') || 'New Reservation'}
-            </button>
-          </div>
+          {(role === 'Admin' || hasPermission('create_booking') || hasPermission('manage_bookings')) && (
+            <div className="flex justify-end mb-6">
+              <button
+                onClick={openBookingModal}
+                className="bg-indigo-600 text-white px-6 py-3.5 rounded-2xl font-black hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2 shadow-xl shadow-indigo-600/20"
+              >
+                <Plus className="w-5 h-5" /> {t('newReservation') || 'New Reservation'}
+              </button>
+            </div>
+          )}
           <div className="bg-white border border-slate-200/60 rounded-[2rem] overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[900px]">
@@ -1971,8 +2026,8 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* TAB 2: Fleet CRUD Manager */}
-      {activeTab === 'fleet' && (
+      {/* TAB 2: Fleet CRUD Manager (Requires view_fleet or manage_fleet permission) */}
+      {activeTab === 'fleet' && canAccessTab('fleet') && (
         <div className="animate-in fade-in duration-500 slide-in-from-bottom-4">
           <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 mb-6">
             <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1 font-bold text-xs tracking-wider select-none shrink-0 shadow-inner">
@@ -1991,12 +2046,14 @@ export default function AdminDashboard() {
                 {t('tableView') || 'Table View'}
               </button>
             </div>
-            <button 
-              onClick={openAddModal}
-              className="bg-indigo-600 text-white px-6 py-3.5 rounded-2xl font-black hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-600/20"
-            >
-              <Plus className="w-5 h-5" /> {t('addVehicle')}
-            </button>
+            {(role === 'Admin' || hasPermission('manage_fleet')) && (
+              <button 
+                onClick={openAddModal}
+                className="bg-indigo-600 text-white px-6 py-3.5 rounded-2xl font-black hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-600/20"
+              >
+                <Plus className="w-5 h-5" /> {t('addVehicle')}
+              </button>
+            )}
           </div>
 
           {/* Fleet Filter Bar */}
@@ -2164,10 +2221,14 @@ export default function AdminDashboard() {
                             </span>
                           </td>
                           <td className="px-8 py-6 text-center">
-                            <div className="flex justify-center gap-2">
-                              <button onClick={() => openEditModal(vehicle)} className="p-2 bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 rounded-xl transition-all border border-slate-200 hover:border-indigo-200" title={t('editVehicle')}><Edit3 className="w-4 h-4" /></button>
-                              <button onClick={() => handleDeleteVehicle(vehicle._id)} className="p-2 bg-slate-50 hover:bg-red-50 text-slate-600 hover:text-red-600 rounded-xl transition-all border border-slate-200 hover:border-red-200" title={t('delete')}><Trash2 className="w-4 h-4" /></button>
-                            </div>
+                            {(role === 'Admin' || hasPermission('manage_fleet')) ? (
+                              <div className="flex justify-center gap-2">
+                                <button onClick={() => openEditModal(vehicle)} className="p-2 bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 rounded-xl transition-all border border-slate-200 hover:border-indigo-200" title={t('editVehicle')}><Edit3 className="w-4 h-4" /></button>
+                                <button onClick={() => handleDeleteVehicle(vehicle._id)} className="p-2 bg-slate-50 hover:bg-red-50 text-slate-600 hover:text-red-600 rounded-xl transition-all border border-slate-200 hover:border-red-200" title={t('delete')}><Trash2 className="w-4 h-4" /></button>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-slate-400 font-bold">Lecture seule</span>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -2180,10 +2241,12 @@ export default function AdminDashboard() {
                 {filteredVehicles.map((vehicle: any) => (
                   <div key={vehicle._id} className="bg-white rounded-[2rem] overflow-hidden border border-slate-200/60 shadow-sm hover:shadow-2xl hover:shadow-slate-200 transition-all duration-500 group flex flex-col relative">
                     {/* Action Buttons overlay */}
-                    <div className="absolute top-4 right-4 z-10 flex gap-2">
-                      <button onClick={() => openEditModal(vehicle)} className="w-8 h-8 bg-white/90 backdrop-blur text-slate-700 hover:text-indigo-600 rounded-lg flex items-center justify-center shadow-md hover:scale-105 transition-all" title={t('editVehicle')}><Edit3 className="w-3.5 h-3.5" /></button>
-                      <button onClick={() => handleDeleteVehicle(vehicle._id)} className="w-8 h-8 bg-white/90 backdrop-blur text-slate-700 hover:text-red-600 rounded-lg flex items-center justify-center shadow-md hover:scale-105 transition-all" title={t('delete')}><Trash2 className="w-3.5 h-3.5" /></button>
-                    </div>
+                    {(role === 'Admin' || hasPermission('manage_fleet')) && (
+                      <div className="absolute top-4 right-4 z-10 flex gap-2">
+                        <button onClick={() => openEditModal(vehicle)} className="w-8 h-8 bg-white/90 backdrop-blur text-slate-700 hover:text-indigo-600 rounded-lg flex items-center justify-center shadow-md hover:scale-105 transition-all" title={t('editVehicle')}><Edit3 className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => handleDeleteVehicle(vehicle._id)} className="w-8 h-8 bg-white/90 backdrop-blur text-slate-700 hover:text-red-600 rounded-lg flex items-center justify-center shadow-md hover:scale-105 transition-all" title={t('delete')}><Trash2 className="w-3.5 h-3.5" /></button>
+                      </div>
+                    )}
 
                     {/* Image Section */}
                     <div className="relative h-56 bg-slate-100 overflow-hidden">
@@ -2243,8 +2306,8 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* TAB 3: Categories Manager (Admin Only) */}
-      {activeTab === 'categories' && role === 'Admin' && (
+      {/* TAB 3: Categories Manager (Requires manage_categories permission) */}
+      {activeTab === 'categories' && canAccessTab('categories') && (
         <CategoriesTab 
           token={token!} 
           categories={categoriesData} 
@@ -2252,23 +2315,23 @@ export default function AdminDashboard() {
         />
       )}
 
-      {/* TAB 4: Messages (Admin Only) */}
-      {activeTab === 'messages' && role === 'Admin' && (
+      {/* TAB 4: Messages (Requires manage_messages permission) */}
+      {activeTab === 'messages' && canAccessTab('messages') && (
         <MessagesTab onUnreadCountChange={setUnreadCount} />
       )}
 
-      {/* TAB 5: Settings (Admin Only) */}
-      {activeTab === 'settings' && role === 'Admin' && (
+      {/* TAB 5: Settings (Admin Only or manage_settings) */}
+      {activeTab === 'settings' && canAccessTab('settings') && (
         <SettingsTab />
       )}
 
-      {/* TAB 7: Extra Options (Admin Only) */}
-      {activeTab === 'options' && role === 'Admin' && (
+      {/* TAB 7: Extra Options (Requires manage_extra_options permission) */}
+      {activeTab === 'options' && canAccessTab('options') && (
         <ExtraOptionsTab />
       )}
 
-      {/* TAB 6: Clients Database (Admin Only) */}
-      {activeTab === 'clients' && role === 'Admin' && (
+      {/* TAB 6: Clients Database (Requires manage_bookings permission) */}
+      {activeTab === 'clients' && canAccessTab('clients') && (
         <div className="animate-in fade-in duration-500 slide-in-from-bottom-4">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">

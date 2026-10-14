@@ -1,7 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import Category from '../models/Category.js';
-import { requireAuth, requireAdmin } from '../middleware/auth.js';
+import { requireAuth, requirePermission } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -26,7 +26,7 @@ router.get('/visible', async (req, res) => {
 });
 
 // POST new category
-router.post('/', requireAuth, requireAdmin, async (req, res) => {
+router.post('/', requireAuth, requirePermission('manage_categories'), async (req, res) => {
   try {
     const { name, name_fr, name_ar, isVisible, subcategories, subcategories_fr, subcategories_ar } = req.body;
     const newCategory = new Category({ name, name_fr, name_ar, isVisible, subcategories, subcategories_fr, subcategories_ar });
@@ -38,7 +38,7 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // PUT update category
-router.put('/:id', requireAuth, requireAdmin, async (req, res) => {
+router.put('/:id', requireAuth, requirePermission('manage_categories'), async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: 'Format d\'identifiant de catégorie invalide.' });
@@ -57,7 +57,7 @@ router.put('/:id', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // DELETE category
-router.delete('/:id', requireAuth, requireAdmin, async (req, res) => {
+router.delete('/:id', requireAuth, requirePermission('manage_categories'), async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: 'Format d\'identifiant de catégorie invalide.' });

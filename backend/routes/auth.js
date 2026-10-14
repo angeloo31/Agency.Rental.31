@@ -115,7 +115,8 @@ router.post('/login', loginLimiter, async (req, res) => {
 
     res.status(200).json({ 
       username: user.username, 
-      role: user.role
+      role: user.role,
+      permissions: user.permissions || []
     });
   } catch (error) {
     console.error('[Auth] Login error:', error.message);
@@ -167,6 +168,7 @@ router.post('/verify-2fa', loginLimiter, async (req, res) => {
     res.status(200).json({
       username: user.username,
       role: user.role,
+      permissions: user.permissions || [],
       message: 'Authentification 2FA réussie.'
     });
   } catch (error) {
@@ -570,7 +572,14 @@ router.post('/users', requireAuth, requireAdmin, async (req, res) => {
       email: email ? email.trim().toLowerCase() : process.env.SMTP_USER || 'vendeur@luxerent.com'
     });
 
-    if (Array.isArray(permissions)) {
+    if (validRole === 'Admin') {
+      newUser.permissions = [
+        'manage_users', 'manage_settings', 'manage_fleet',
+        'manage_bookings', 'create_booking', 'view_fleet',
+        'view_analytics', 'manage_categories', 'manage_extra_options',
+        'manage_messages', 'seed_db'
+      ];
+    } else if (Array.isArray(permissions)) {
       newUser.permissions = permissions;
     }
 
@@ -616,9 +625,17 @@ router.patch('/users/:id', requireAuth, requireAdmin, async (req, res) => {
 
     if (role && ['Admin', 'Seller', 'Agent', 'Customer'].includes(role)) {
       userToUpdate.role = role;
+      if (role === 'Admin') {
+        userToUpdate.permissions = [
+          'manage_users', 'manage_settings', 'manage_fleet',
+          'manage_bookings', 'create_booking', 'view_fleet',
+          'view_analytics', 'manage_categories', 'manage_extra_options',
+          'manage_messages', 'seed_db'
+        ];
+      }
     }
 
-    if (Array.isArray(permissions)) {
+    if (userToUpdate.role !== 'Admin' && Array.isArray(permissions)) {
       userToUpdate.permissions = permissions;
     }
 

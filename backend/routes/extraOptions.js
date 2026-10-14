@@ -1,7 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import ExtraOption from '../models/ExtraOption.js';
-import { requireAuth, requireAdmin } from '../middleware/auth.js';
+import { requireAuth, requirePermission } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -15,8 +15,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST a new extra option (Admin only)
-router.post('/', requireAuth, requireAdmin, async (req, res) => {
+// POST a new extra option
+router.post('/', requireAuth, requirePermission('manage_extra_options'), async (req, res) => {
   try {
     const newOption = new ExtraOption(req.body);
     const savedOption = await newOption.save();
@@ -26,8 +26,8 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
-// PUT update an extra option (Admin only)
-router.put('/:id', requireAuth, requireAdmin, async (req, res) => {
+// PUT update an extra option
+router.put('/:id', requireAuth, requirePermission('manage_extra_options'), async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: 'Invalid Option ID format.' });
@@ -43,8 +43,8 @@ router.put('/:id', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
-// PATCH toggle status (Admin only)
-router.patch('/:id/status', requireAuth, requireAdmin, async (req, res) => {
+// PATCH toggle status
+router.patch('/:id/status', requireAuth, requirePermission('manage_extra_options'), async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: 'Invalid Option ID format.' });
@@ -59,8 +59,8 @@ router.patch('/:id/status', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
-// DELETE an extra option (Admin only)
-router.delete('/:id', requireAuth, requireAdmin, async (req, res) => {
+// DELETE an extra option
+router.delete('/:id', requireAuth, requirePermission('manage_extra_options'), async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: 'Invalid Option ID format.' });

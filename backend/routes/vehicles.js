@@ -119,8 +119,8 @@ router.put('/:id', requireAuth, requirePermission('manage_fleet'), async (req, r
   }
 });
 
-// DELETE /:id - Removes a vehicle from catalog (Admin operations)
-router.delete('/:id', requireAuth, requireAdmin, async (req, res) => {
+// DELETE /:id - Removes a vehicle from catalog (Admin & Seller with manage_fleet)
+router.delete('/:id', requireAuth, requirePermission('manage_fleet'), async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: 'Format d\'identifiant de véhicule invalide.' });
